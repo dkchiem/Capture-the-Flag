@@ -13,6 +13,17 @@ export class Player {
   }
 
   draw(ctx) {
+    // Gun
+    const gunWidth = 55;
+    const gunHeight = 25;
+    ctx.save();
+    ctx.fillStyle = '#979797';
+    ctx.translate(this.x + tileSize / 2, this.y + tileSize / 2);
+    ctx.rotate(this.facingAngle);
+    ctx.fillRect(0, -gunHeight / 2, gunWidth, gunHeight);
+    ctx.restore();
+
+    // Circle
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = this.teamColor;
@@ -66,4 +77,6 @@ export class Player {
       }
     });
   }
+
+  shoot(ctx) {}
 }
