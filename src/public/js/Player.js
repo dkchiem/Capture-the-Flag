@@ -10,6 +10,7 @@ export class Player {
     this.radius = radius;
     this.facingAngle = facingAngle;
     this.speed = speed;
+    this.shotBullets = [];
   }
 
   draw(ctx) {
@@ -78,5 +79,17 @@ export class Player {
     });
   }
 
-  shoot(ctx) {}
+  shoot() {
+    this.shotBullets.push();
+
+    // const bulletWidth = 5;
+    // const bulletHeight = 5;
+    // const bulletSpeed = 10;
+    // ctx.save();
+    // ctx.fillStyle = this.teamColor;
+    // ctx.translate(this.x + tileSize / 2, this.y + tileSize / 2);
+    // ctx.rotate(this.facingAngle);
+    // ctx.fillRect(0, -bulletHeight / 2, bulletWidth, bulletHeight);
+    // ctx.restore();
+  }
 }

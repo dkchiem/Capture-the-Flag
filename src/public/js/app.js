@@ -52,6 +52,16 @@ addEventListener('mousemove', (e) => {
   );
 });
 
+// Shoot client player bullet
+addEventListener('click', (e) => {
+  // socket.emit('shoot', {
+  //   x: clientPlayer.x + tileSize / 2,
+  //   y: clientPlayer.y + tileSize / 2,
+  //   facingAngle: clientPlayer.facingAngle,
+  // });
+  clientPlayer.shoot();
+});
+
 function render() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
