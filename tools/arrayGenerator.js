@@ -1,5 +1,5 @@
-const rows = parseInt(process.argv.slice(2)[0]);
-const columns = parseInt(process.argv.slice(2)[1]);
+const columns = parseInt(process.argv.slice(2)[0]);
+const rows = parseInt(process.argv.slice(2)[1]);
 
 const array = Array(rows)
   .fill(0)
@@ -10,6 +10,6 @@ function pbcopy(data) {
   proc.stdin.write(data);
   proc.stdin.end();
 }
-pbcopy(JSON.stringify(array));
+pbcopy(JSON.stringify(array).replace(/\],/g, '],\n'));
 
 console.log('Array copied to clipboard!');
