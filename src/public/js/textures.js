@@ -14,9 +14,19 @@ rocks.src = 'images/rocks.jpg';
 const stone = new Image();
 stone.src = 'images/stone.jpg';
 
+// Red Flag
+const redFlag = new Image();
+redFlag.src = 'images/flag-red.png';
+
+// Blue Flag
+const blueFlag = new Image();
+blueFlag.src = 'images/flag-blue.png';
+
 export const texture = {
   grass,
   dirt,
   rocks,
   stone,
+  redFlag,
+  blueFlag,
 };

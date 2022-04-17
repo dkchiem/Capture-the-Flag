@@ -8,10 +8,10 @@ const ctx = canvas.getContext('2d');
 const socket = io();
 
 const camera = new Camera();
-const map1 = new Map(1, map1Data);
+const map1 = new Map(1, map1Data, team.RED);
 const clientPlayer = new Player(
   'player1',
-  team.BLUE,
+  team.RED,
   map1.width / 2 - tileSize / 2,
   canvas.height / 2,
   tileSize / 2,
@@ -68,8 +68,7 @@ function render() {
   camera.follow(clientPlayer, map1);
   ctx.translate(-camera.x, -camera.y);
   map1.draw(ctx);
-  clientPlayer.draw(ctx);
-  clientPlayer.move(controller, map1);
+  clientPlayer.draw(ctx, controller, map1);
   requestAnimationFrame(render);
 }
 
