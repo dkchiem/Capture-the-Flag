@@ -1,5 +1,5 @@
 import { Item } from './Item.js';
-import { tileSize, team } from './constants.js';
+import { tileSize, team, direction } from './constants.js';
 import { texture } from './textures.js';
 
 export class Map {
@@ -72,6 +72,7 @@ export class Map {
           case 3:
           case 4:
           case 5:
+          case 6:
             ctx.fillStyle = ctx.createPattern(texture.stone, 'repeat');
             break;
 
@@ -82,8 +83,8 @@ export class Map {
         ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block outline
-        // ctx.strokeStyle = 'yellow';
-        // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        ctx.strokeStyle = 'yellow';
+        ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block numbers
         // ctx.fillStyle = 'white';
@@ -99,5 +100,22 @@ export class Map {
     });
 
     ctx.restore();
+  }
+
+  getSpawnPoint(teamColor) {
+    let spawnPoint = { x: 0, y: 0 };
+
+    this.mapData.forEach((row, y) => {
+      row.forEach((block, x) => {
+        if (teamColor === this.teamColor && block === 6) {
+          spawnPoint = { x: x * tileSize, y: y * tileSize };
+        }
+        if (teamColor != this.teamColor && block === 3) {
+          spawnPoint = { x: x * tileSize, y: y * tileSize };
+        }
+      });
+    });
+
+    return spawnPoint;
   }
 }

@@ -9,15 +9,7 @@ const socket = io();
 
 const camera = new Camera();
 const map1 = new Map(1, map1Data, team.RED);
-const clientPlayer = new Player(
-  'player1',
-  team.RED,
-  map1.width / 2 - tileSize / 2,
-  canvas.height / 2,
-  tileSize / 2,
-  0,
-  5,
-);
+const clientPlayer = new Player('player1', team.BLUE, map1, tileSize / 2, 0, 5);
 
 // Resize the canvas to fill the screen
 resizeCanvas();
@@ -47,8 +39,8 @@ addEventListener('keyup', (e) => {
 // Client player facing direction
 addEventListener('mousemove', (e) => {
   clientPlayer.facingAngle = Math.atan2(
-    e.clientY - (clientPlayer.y + tileSize / 2 - camera.y),
-    e.clientX - (clientPlayer.x + tileSize / 2 - camera.x),
+    e.clientY - (clientPlayer.y - camera.y),
+    e.clientX - (clientPlayer.x - camera.x),
   );
 });
 
