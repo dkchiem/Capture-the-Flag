@@ -8,8 +8,8 @@ const ctx = canvas.getContext('2d');
 const socket = io();
 
 const camera = new Camera();
-const map1 = new Map(1, map1Data, team.RED);
-const clientPlayer = new Player('player1', team.BLUE, map1, tileSize / 2, 0, 5);
+const map1 = new Map(1, map1Data);
+const clientPlayer = new Player('player1', team.RED, tileSize / 2, 0, 5, map1);
 
 // Resize the canvas to fill the screen
 resizeCanvas();
@@ -60,7 +60,7 @@ function render() {
   camera.follow(clientPlayer, map1);
   ctx.translate(-camera.x, -camera.y);
   map1.draw(ctx);
-  clientPlayer.draw(ctx, controller, map1);
+  clientPlayer.draw(ctx, controller);
   requestAnimationFrame(render);
 }
 

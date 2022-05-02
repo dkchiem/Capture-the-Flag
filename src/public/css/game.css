@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: black;
+}
+
+#leaderboard {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+}
+
+.points {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  padding: 15px;
+  font-family: 'Bebas Neue', cursive;
+}
+
+#red-points {
+  background-color: #e74e4e;
+  border-radius: 0 0 0 10px;
+}
+
+#blue-points {
+  background-color: #4e6fe7;
+  border-radius: 0 0 10px 0;
+}

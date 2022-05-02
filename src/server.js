@@ -6,7 +6,15 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/home.html');
+});
+
+app.get('/party-select', (req, res) => {
+  res.sendFile(__dirname + '/party-select.html');
+});
+
+app.get('/game', (req, res) => {
+  res.sendFile(__dirname + '/game.html');
 });
 
 app.use(express.static(__dirname + '/public'));

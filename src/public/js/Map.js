@@ -9,7 +9,6 @@ export class Map {
     this.width = this.mapData[0].length * tileSize;
     this.height = this.mapData.length * tileSize;
     this.items = [];
-    this.teamColor = teamColor;
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
@@ -22,10 +21,8 @@ export class Map {
                 y * tileSize,
                 tileSize,
                 tileSize,
-                this.teamColor === team.RED
-                  ? texture.blueFlag
-                  : texture.redFlag,
-                this.teamColor === team.RED ? team.BLUE : team.RED,
+                texture.blueFlag,
+                team.BLUE,
               ),
             );
             break;
@@ -38,10 +35,36 @@ export class Map {
                 y * tileSize,
                 tileSize,
                 tileSize,
-                this.teamColor === team.RED
-                  ? texture.redFlag
-                  : texture.blueFlag,
-                this.teamColor,
+                texture.redFlag,
+                team.RED,
+              ),
+            );
+            break;
+
+          case 7:
+            this.items.push(
+              new Item(
+                'chest',
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize,
+                texture.closeChest,
+                team.BLUE,
+              ),
+            );
+            break;
+
+          case 8:
+            this.items.push(
+              new Item(
+                'chest',
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize,
+                texture.closeChest,
+                team.RED,
               ),
             );
             break;
@@ -73,6 +96,8 @@ export class Map {
           case 4:
           case 5:
           case 6:
+          case 7:
+          case 8:
             ctx.fillStyle = ctx.createPattern(texture.stone, 'repeat');
             break;
 
@@ -83,8 +108,8 @@ export class Map {
         ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block outline
-        ctx.strokeStyle = 'yellow';
-        ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        // ctx.strokeStyle = 'yellow';
+        // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block numbers
         // ctx.fillStyle = 'white';
@@ -107,15 +132,19 @@ export class Map {
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
-        if (teamColor === this.teamColor && block === 6) {
+        if (teamColor === team.RED && block === 6) {
           spawnPoint = { x: x * tileSize, y: y * tileSize };
         }
-        if (teamColor != this.teamColor && block === 3) {
+        if (teamColor === team.BLUE && block === 3) {
           spawnPoint = { x: x * tileSize, y: y * tileSize };
         }
       });
     });
 
     return spawnPoint;
+  }
+
+  getTileAt(x, y) {
+    return this.mapData[Math.floor(y / tileSize)][Math.floor(x / tileSize)];
   }
 }

@@ -7,9 +7,12 @@ export class Item {
     this.height = height;
     this.texture = texture;
     this.team = team;
+    this.hidden = false;
   }
 
   draw(ctx) {
-    ctx.drawImage(this.texture, this.x, this.y, this.width, this.height);
+    if (!this.hidden) {
+      ctx.drawImage(this.texture, this.x, this.y, this.width, this.height);
+    }
   }
 }

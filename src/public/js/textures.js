@@ -22,6 +22,14 @@ redFlag.src = 'images/flag-red.png';
 const blueFlag = new Image();
 blueFlag.src = 'images/flag-blue.png';
 
+// Open Chest
+const openChest = new Image();
+openChest.src = 'images/chest-open.png';
+
+// Close Chest
+const closeChest = new Image();
+closeChest.src = 'images/chest-close.png';
+
 export const texture = {
   grass,
   dirt,
@@ -29,4 +37,6 @@ export const texture = {
   stone,
   redFlag,
   blueFlag,
+  openChest,
+  closeChest,
 };

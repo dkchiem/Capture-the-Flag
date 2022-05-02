@@ -1,9 +1,14 @@
-import { tileSize, direction } from './constants.js';
+import { tileSize, direction, team } from './constants.js';
 import { clamp } from './utils.js';
 import { Bullet } from './Bullet.js';
+import { texture } from './textures.js';
+
+const redPointsText = document.querySelector('#red-points');
+const bluePointsText = document.querySelector('#blue-points');
+let points = { red: 0, blue: 0 };
 
 export class Player {
-  constructor(name, teamColor, map, radius, facingAngle, speed) {
+  constructor(name, teamColor, radius, facingAngle, speed, map) {
     this.name = name;
     this.teamColor = teamColor;
     this.map = map;
@@ -15,11 +20,11 @@ export class Player {
     this.shotBullets = [];
     this.gunWidth = 55;
     this.gunHeight = 25;
+    this.flag = null;
   }
 
-  draw(ctx, controller, map) {
+  draw(ctx, controller) {
     // Move player
-    console.log(this.x / tileSize, this.y / tileSize);
     Object.keys(controller).forEach((key) => {
       if (controller[key]) {
         switch (key) {
@@ -28,7 +33,7 @@ export class Player {
               this.y = clamp(
                 this.y - this.speed,
                 0,
-                tileSize * map.mapData.length - tileSize,
+                tileSize * this.map.mapData.length - tileSize,
               );
             }
             break;
@@ -37,7 +42,7 @@ export class Player {
               this.y = clamp(
                 this.y + this.speed,
                 0,
-                tileSize * map.mapData.length - tileSize,
+                tileSize * this.map.mapData.length - tileSize,
               );
             }
             break;
@@ -46,7 +51,7 @@ export class Player {
               this.x = clamp(
                 this.x - this.speed,
                 0,
-                tileSize * map.mapData[0].length - tileSize,
+                tileSize * this.map.mapData[0].length - tileSize,
               );
             }
             break;
@@ -55,7 +60,7 @@ export class Player {
               this.x = clamp(
                 this.x + this.speed,
                 0,
-                tileSize * map.mapData[0].length - tileSize,
+                tileSize * this.map.mapData[0].length - tileSize,
               );
             }
             break;
@@ -66,8 +71,8 @@ export class Player {
     });
 
     // Check if player touches item
-    if (map.items.length > 0) {
-      map.items.forEach((item) => {
+    if (this.map.items.length > 0) {
+      this.map.items.forEach((item) => {
         if (
           this.x + this.radius >= item.x &&
           this.x - this.radius <= item.x + item.width &&
@@ -75,7 +80,28 @@ export class Player {
           this.y - this.radius <= item.y + item.height
         ) {
           if (item.type === 'flag' && item.team != this.teamColor) {
-            map.items.splice(map.items.indexOf(item), 1);
+            item.hidden = true;
+            this.flag = item;
+          }
+          if (
+            item.type === 'chest' &&
+            item.team === this.teamColor &&
+            this.flag != null
+          ) {
+            item.texture = texture.openChest;
+            this.flag.hidden = false;
+            this.flag = null;
+            if (this.teamColor === team.RED) {
+              points.red += 1;
+              redPointsText.innerText = points.red;
+            }
+            if (this.teamColor === team.BLUE) {
+              points.blue += 1;
+              bluePointsText.innerText = points.blue;
+            }
+            setTimeout(() => {
+              item.texture = texture.closeChest;
+            }, 2000);
           }
         }
       });
@@ -84,14 +110,6 @@ export class Player {
     // Bullets
     this.shotBullets.forEach((bullet) => {
       bullet.draw(ctx, this.gunWidth);
-      if (
-        bullet.x < 0 ||
-        bullet.y < 0 ||
-        bullet.x > map.width ||
-        bullet.y > map.height
-      ) {
-        this.shotBullets.splice(this.shotBullets.indexOf(bullet), 1);
-      }
     });
 
     // Gun
@@ -109,122 +127,82 @@ export class Player {
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
     ctx.fill();
     ctx.restore();
+
+    // Flag
+    if (this.flag != null) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.facingAngle - Math.PI / 2);
+      ctx.drawImage(
+        this.flag.texture,
+        -tileSize / 2,
+        -tileSize,
+        tileSize,
+        tileSize,
+      );
+      ctx.restore();
+    }
   }
 
   shoot() {
     this.shotBullets.push(
-      new Bullet(this.x, this.y, 10, this.facingAngle, 15, this.teamColor),
+      new Bullet(
+        this.x,
+        this.y,
+        10,
+        this.facingAngle,
+        15,
+        this.teamColor,
+        this.map,
+        this,
+      ),
     );
   }
 
   didCollide(blockNumber, movingDirection) {
-    // let collide = false;
-    // const tileX = Math.floor(this.x / tileSize);
-    // const tileY = Math.floor(this.y / tileSize);
-
-    // this.map.mapData.forEach((row, y) => {
-    //   row.forEach((block, x) => {
-    //     if (block === blockNumber) {
-    //       const blockX = x * tileSize;
-    //       const blockY = y * tileSize;
-
-    //       if (
-    //         this.x + this.radius >= blockX &&
-    //         this.x - this.radius <= x * tileSize + tileSize &&
-    //         this.y + this.radius >= blockY &&
-    //         this.y - this.radius <= blockYw + tileSize
-    //       ) {
-    //         collide = true;
-    //         console.log(this.x, this.y);
-    //       }
-    //     }
-    //   });
-    // });
-
-    // this.map.mapData.forEach((row, y) => {
-    //   row.forEach((block, x) => {
-    //     if (
-    //       x <= tileX + 1 &&
-    //       x >= tileX - 1 &&
-    //       y <= tileY + 1 &&
-    //       y >= tileY - 1
-    //     ) {
-    //       if (block === blockNumber) {
-    //         switch (movingDirection) {
-    //           case direction.UP:
-    //             if (
-    //               this.y - this.radius - this.speed <
-    //               y * tileSize + tileSize
-    //             ) {
-    //               collide = true;
-    //             }
-    //             break;
-    //           case direction.RIGHT:
-    //             if (this.x + this.radius + this.speed < x * tileSize) {
-    //               collide = true;
-    //             }
-    //             break;
-    //           case direction.DOWN:
-    //             if (this.y + this.radius + this.speed < y * tileSize) {
-    //               collide = true;
-    //             }
-    //             break;
-    //           case direction.LEFT:
-    //             if (
-    //               this.x - this.radius - this.speed <
-    //               x * tileSize + tileSize
-    //             ) {
-    //               collide = true;
-    //             }
-    //             break;
-    //           default:
-    //             break;
-    //         }
-    //       }
-    //     }
-    //   });
-    // });
-    // return collide ? movingDirection : false;
     switch (movingDirection) {
       case direction.UP:
-        const upValue1 =
-          this.map.mapData[
-            Math.floor((this.y - this.radius - this.speed) / tileSize)
-          ][Math.floor(this.x / tileSize - 0.5)];
-        const upValue2 =
-          this.map.mapData[
-            Math.floor((this.y - this.radius - this.speed) / tileSize)
-          ][Math.floor(this.x / tileSize + 0.5)];
+        const upValue1 = this.map.getTileAt(
+          this.x - this.radius + 1,
+          this.y - this.radius - this.speed,
+        );
+        const upValue2 = this.map.getTileAt(
+          this.x + this.radius - 1,
+          this.y - this.radius - this.speed,
+        );
         return upValue1 === 1 || upValue2 === 1;
+
       case direction.RIGHT:
-        const rightValue1 =
-          this.map.mapData[Math.floor(this.y / tileSize - 0.5)][
-            Math.floor((this.x + this.radius) / tileSize)
-          ];
-        const rightValue2 =
-          this.map.mapData[Math.floor(this.y / tileSize + 0.5)][
-            Math.floor((this.x + this.radius) / tileSize)
-          ];
+        const rightValue1 = this.map.getTileAt(
+          this.x + this.radius,
+          this.y - this.radius + 1,
+        );
+        const rightValue2 = this.map.getTileAt(
+          this.x + this.radius,
+          this.y + this.radius - 1,
+        );
         return rightValue1 === 1 || rightValue2 === 1;
+
       case direction.DOWN:
-        const downValue1 =
-          this.map.mapData[Math.floor((this.y + this.radius) / tileSize)][
-            Math.floor(this.x / tileSize - 0.5)
-          ];
-        const downValue2 =
-          this.map.mapData[Math.floor((this.y + this.radius) / tileSize)][
-            Math.floor(this.x / tileSize + 0.5)
-          ];
+        const downValue1 = this.map.getTileAt(
+          this.x - this.radius + 1,
+          this.y + this.radius,
+        );
+        const downValue2 = this.map.getTileAt(
+          this.x + this.radius - 1,
+          this.y + this.radius,
+        );
         return downValue1 === 1 || downValue2 === 1;
+
       case direction.LEFT:
-        const leftValue1 =
-          this.map.mapData[Math.floor(this.y / tileSize - 0.5)][
-            Math.floor((this.x - this.radius - this.speed) / tileSize)
-          ];
-        const leftValue2 =
-          this.map.mapData[Math.floor(this.y / tileSize + 0.5)][
-            Math.floor((this.x - this.radius - this.speed) / tileSize)
-          ];
+        const leftValue1 = this.map.getTileAt(
+          this.x - this.radius - this.speed,
+          this.y - this.radius + 1,
+        );
+        const leftValue2 = this.map.getTileAt(
+          this.x - this.radius - this.speed,
+          this.y + this.radius - 1,
+        );
         return leftValue1 === 1 || leftValue2 === 1;
       default:
         return false;
