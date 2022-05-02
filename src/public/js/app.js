@@ -3,13 +3,23 @@ import { Player } from './Player.js';
 import { Camera } from './Camera.js';
 import { tileSize, team, direction, map1Data } from './constants.js';
 
+const socket = io();
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
-const socket = io();
 
 const camera = new Camera();
 const map1 = new Map(1, map1Data);
-const clientPlayer = new Player('player1', team.RED, tileSize / 2, 0, 5, map1);
+// const clientPlayer = new Player('player1', team.RED, tileSize / 2, 0, 5, map1);
+
+socket.emit(
+  'newPlayer',
+  new Player('player1', team.RED, tileSize / 2, 0, 5, map1),
+);
+
+socket.on('create-player', function (state) {
+  // CreateShip is a function I've already defined to create and return a sprite
+  CreateShip(1, state.x, state.y, state.angle);
+});
 
 // Resize the canvas to fill the screen
 resizeCanvas();
@@ -46,15 +56,10 @@ addEventListener('mousemove', (e) => {
 
 // Shoot client player bullet
 addEventListener('click', (e) => {
-  // socket.emit('shoot', {
-  //   x: clientPlayer.x + tileSize / 2,
-  //   y: clientPlayer.y + tileSize / 2,
-  //   facingAngle: clientPlayer.facingAngle,
-  // });
   clientPlayer.shoot();
 });
 
-function render() {
+export function render() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   camera.follow(clientPlayer, map1);
@@ -63,5 +68,3 @@ function render() {
   clientPlayer.draw(ctx, controller);
   requestAnimationFrame(render);
 }
-
-render();
