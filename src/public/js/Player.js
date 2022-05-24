@@ -15,12 +15,12 @@ function updateHpBar(hp) {
 }
 
 export class Player {
-  constructor(name, teamColor, radius, facingAngle, speed, map, client) {
+  constructor(name, team, radius, facingAngle, speed, map, client) {
     this.name = name;
-    this.teamColor = teamColor;
+    this.team = team;
     this.map = map;
-    this.x = map.getSpawnPoint(teamColor).x + tileSize / 2;
-    this.y = map.getSpawnPoint(teamColor).y + tileSize / 2;
+    this.x = map.getSpawnPoint(team).x + tileSize / 2;
+    this.y = map.getSpawnPoint(team).y + tileSize / 2;
     this.radius = radius;
     this.facingAngle = facingAngle;
     this.speed = speed;
@@ -51,11 +51,7 @@ export class Player {
           this.y + this.radius >= item.y &&
           this.y - this.radius <= item.y + item.height
         ) {
-          if (
-            item.type === 'flag' &&
-            item.team != this.teamColor &&
-            this.client
-          ) {
+          if (item.type === 'flag' && item.team != this.team && this.client) {
             item.hidden = true;
             this.flag = item;
             socket.emit('pickupFlag', {
@@ -66,7 +62,7 @@ export class Player {
           }
           if (
             item.type === 'chest' &&
-            item.team === this.teamColor &&
+            item.team === this.team &&
             this.flag != null &&
             this.client
           ) {
@@ -99,7 +95,7 @@ export class Player {
     ctx.save();
     ctx.beginPath();
     ctx.globalAlpha = this.alpha;
-    ctx.fillStyle = this.teamColor;
+    ctx.fillStyle = this.team;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
     ctx.fill();
     ctx.restore();
@@ -120,7 +116,7 @@ export class Player {
     }
   }
 
-  move(controller, socket) {
+  move(controller) {
     Object.keys(controller).forEach((key) => {
       if (controller[key]) {
         switch (key) {
@@ -164,12 +160,6 @@ export class Player {
             break;
         }
       }
-    });
-
-    socket.emit('movePlayer', {
-      x: this.x,
-      y: this.y,
-      facingAngle: this.facingAngle,
     });
   }
 
@@ -230,8 +220,8 @@ export class Player {
   }
 
   respawn() {
-    this.x = this.map.getSpawnPoint(this.teamColor).x + tileSize / 2;
-    this.y = this.map.getSpawnPoint(this.teamColor).y + tileSize / 2;
+    this.x = this.map.getSpawnPoint(this.team).x + tileSize / 2;
+    this.y = this.map.getSpawnPoint(this.team).y + tileSize / 2;
     if (this.client) {
       updateHpBar(100);
     }

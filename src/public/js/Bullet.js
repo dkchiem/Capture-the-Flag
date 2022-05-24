@@ -55,8 +55,8 @@ export class Bullet {
       //   });
       // });
 
-      this.x += this.speedX;
-      this.y += this.speedY;
+      // this.x += this.speedX;
+      // this.y += this.speedY;
     }
   }
 

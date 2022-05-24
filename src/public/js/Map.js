@@ -3,8 +3,7 @@ import { tileSize, team, direction } from './constants.js';
 import { texture } from './textures.js';
 
 export class Map {
-  constructor(id, mapData, teamColor) {
-    this.id = id;
+  constructor(mapData) {
     this.mapData = mapData;
     this.width = this.mapData[0].length * tileSize;
     this.height = this.mapData.length * tileSize;
@@ -127,15 +126,15 @@ export class Map {
     ctx.restore();
   }
 
-  getSpawnPoint(teamColor) {
+  getSpawnPoint(playerTeam) {
     let spawnPoint = { x: 0, y: 0 };
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
-        if (teamColor === team.RED && block === 6) {
+        if (playerTeam === team.RED && block === 6) {
           spawnPoint = { x: x * tileSize, y: y * tileSize };
         }
-        if (teamColor === team.BLUE && block === 3) {
+        if (playerTeam === team.BLUE && block === 3) {
           spawnPoint = { x: x * tileSize, y: y * tileSize };
         }
       });

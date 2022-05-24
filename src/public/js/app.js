@@ -2,33 +2,41 @@ import { Map } from './Map.js';
 import { Player } from './Player.js';
 import { Camera } from './Camera.js';
 import { Bullet } from './Bullet.js';
-import { tileSize, team, direction, map1Data } from './constants.js';
+import { tileSize, team, direction } from './constants.js';
 
 const socket = io();
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const camera = new Camera();
-const map = new Map(1, map1Data);
+const shotBullets = [];
 const otherPlayers = {};
 let clientPlayer;
-const shotBullets = [];
+let map;
 
-socket.emit('newMap', { data: map1Data, tileSize });
+// Initialize player game
+socket.on('newGameData', (gameData) => {
+  map = new Map(gameData.map);
+  clientPlayer = new Player(
+    'client',
+    gameData.team,
+    tileSize / 2,
+    0,
+    5,
+    map,
+    true,
+  );
 
-socket.on('teamColor', (teamColor) => {
-  clientPlayer = new Player('client', teamColor, tileSize / 2, 0, 5, map, true);
-
-  // Emit new player events
-  socket.emit('newPlayer', clientPlayer);
+  socket.emit('newPlayer', {
+    x: clientPlayer.x,
+    y: clientPlayer.y,
+    gunWidth: clientPlayer.gunWidth,
+    facingAngle: clientPlayer.facingAngle,
+  });
 
   setup();
   render();
 });
-
-// socket.on('createPlayer', (teamColor) => {
-//   clientPlayer = new Player('client', teamColor, tileSize / 2, 0, 5, map, true);
-// });
 
 // Listen for player update events
 socket.on('updatePlayers', (playersData) => {
@@ -39,7 +47,7 @@ socket.on('updatePlayers', (playersData) => {
       const playerData = playersData[id];
       const player = new Player(
         'player',
-        playerData.teamColor,
+        playerData.team,
         tileSize / 2,
         playerData.facingAngle,
         5,
@@ -63,10 +71,23 @@ socket.on('updatePlayers', (playersData) => {
     }
 
     // Update position of other players
-    if (id != socket.id) {
-      otherPlayers[id].x = playersData[id].x;
-      otherPlayers[id].y = playersData[id].y;
-      otherPlayers[id].facingAngle = playersData[id].facingAngle;
+    // if (id != socket.id) {
+    //   otherPlayers[id].x = playersData[id].x;
+    //   otherPlayers[id].y = playersData[id].y;
+    //   otherPlayers[id].facingAngle = playersData[id].facingAngle;
+    // }
+
+    for (const id in otherPlayers) {
+      const player = otherPlayers[id];
+      if (player.x != undefined) {
+        player.x += (player.targetX - player.x) * 0.16;
+        player.y += (player.targetY - player.y) * 0.16;
+        // Interpolate angle while avoiding the positive/negative issue
+        const dir = (player.targetFacingAngle - p.rotation) / (Math.PI * 2);
+        dir -= Math.round(dir);
+        dir = dir * Math.PI * 2;
+        p.rotation += dir * 0.16;
+      }
     }
   }
 
@@ -79,15 +100,15 @@ socket.on('updatePlayers', (playersData) => {
 });
 
 // Listen for bullet update events
-socket.on('bulletsUpdate', (serverBullets) => {
+socket.on('updateBullets', (serverBullets) => {
   serverBullets.forEach((bullet, i) => {
     if (shotBullets[i] == undefined) {
       shotBullets[i] = new Bullet(
         bullet.x,
         bullet.y,
-        10,
+        bullet.radius,
         bullet.facingAngle,
-        15,
+        bullet.speed,
         bullet.color,
         map,
       );
@@ -144,6 +165,7 @@ socket.on('gameOver', (winningTeam) => {
 });
 
 const controller = { w: false, a: false, s: false, d: false };
+
 function setup() {
   // Resize the canvas to fill the screen
   resizeCanvas();
@@ -179,19 +201,30 @@ function setup() {
 
   // Shoot client player bullet
   addEventListener('click', (e) => {
-    const bullet = new Bullet(
-      clientPlayer.x,
-      clientPlayer.y,
-      10,
-      clientPlayer.facingAngle,
-      15,
-      clientPlayer.teamColor,
-      map,
-      clientPlayer,
-    );
-    shotBullets.push(bullet);
-    socket.emit('shootBullet', bullet);
+    // const bullet = new Bullet(
+    //   clientPlayer.x +
+    //     (clientPlayer.gunWidth - 10) * Math.cos(clientPlayer.facingAngle),
+    //   clientPlayer.y +
+    //     (clientPlayer.gunWidth - 10) * Math.sin(clientPlayer.facingAngle),
+    //   10,
+    //   clientPlayer.facingAngle,
+    //   1,
+    //   clientPlayer.teamColor,
+    //   map,
+    //   clientPlayer,
+    // );
+    // shotBullets.push(bullet);
+    socket.emit('shootBullet');
   });
+
+  // Send new player position to server
+  setInterval(() => {
+    socket.emit('movePlayer', {
+      x: clientPlayer.x,
+      y: clientPlayer.y,
+      facingAngle: clientPlayer.facingAngle,
+    });
+  }, 100);
 }
 
 export function render() {
@@ -204,7 +237,7 @@ export function render() {
     bullet.draw(ctx);
   });
   clientPlayer.draw(ctx, socket);
-  clientPlayer.move(controller, socket);
+  clientPlayer.move(controller);
   for (const id in otherPlayers) {
     otherPlayers[id].draw(ctx, socket);
   }

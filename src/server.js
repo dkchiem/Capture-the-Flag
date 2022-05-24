@@ -1,79 +1,85 @@
-const express = require('express');
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { maps } from './maps.js';
+import { tileSize, team } from './public/js/constants.js';
+import { nextTeamGenerator } from './utility.js';
+
 const app = express();
-const http = require('http');
 const server = http.createServer(app);
-const { Server } = require('socket.io');
 const io = new Server(server);
-const path = require('path');
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const team = {
-  RED: '#E74E4E',
-  BLUE: '#4E6FE7',
-};
-
-// let parties = [
-//   { id: 123456, players: ['123456', '123456'] },
-//   { id: 123457, players: ['123456', '123456'] },
-// ];
 let players = {};
 let bullets = [];
-let mapData;
-let tileSize;
+const mapData = maps[0];
 let points = { red: 0, blue: 0 };
-let nextTeam = team.RED;
+
+const playerTeam = nextTeamGenerator(team);
 
 app.set('views', path.join(__dirname, '/views'));
 app.set('view engine', 'ejs');
-
 app.get('/', (req, res) => {
   res.render('pages/home');
 });
-
 app.get('/game', (req, res) => {
   res.render('pages/index');
 });
-
 app.use(express.static(__dirname + '/public'));
 
+// Socket.io
 io.on('connection', (socket) => {
   console.log('New client has connected with id:', socket.id);
 
-  if (nextTeam === team.RED) {
-    nextTeam = team.BLUE;
-  } else {
-    nextTeam = team.RED;
-  }
-  socket.emit('teamColor', nextTeam);
+  const newPlayerTeam = playerTeam.next().value;
 
-  socket.on('newMap', (map) => {
-    mapData = map.data;
-    tileSize = map.tileSize;
-  });
+  // Initialize player game
+  socket.emit('newGameData', { team: newPlayerTeam, map: mapData });
 
-  socket.on('newPlayer', (playerData) => {
-    // io.emit('createMap', { id: 1, data: map1Data });
-    players[socket.id] = playerData;
+  // Add new player
+  socket.on('newPlayer', (PlayerData) => {
+    players[socket.id] = {
+      ...PlayerData,
+      team: newPlayerTeam,
+    };
     io.emit('updatePlayers', players);
   });
 
+  // Disconnect player
   socket.on('disconnect', () => {
     console.log(`Client ${socket.id} has disconnected`);
     delete players[socket.id];
     io.emit('updatePlayers', players);
   });
 
+  // Move player
   socket.on('movePlayer', (positionData) => {
-    if (players[socket.id] == undefined) return;
-    players[socket.id].x = positionData.x;
-    players[socket.id].y = positionData.y;
-    players[socket.id].facingAngle = positionData.facingAngle;
+    const player = players[socket.id];
+    if (player == undefined) return;
+    player.x = positionData.x;
+    player.y = positionData.y;
+    player.facingAngle = positionData.facingAngle;
     socket.broadcast.emit('updatePlayers', players);
   });
 
-  socket.on('shootBullet', (bulletData) => {
+  // Shoot bullet
+  socket.on('shootBullet', () => {
     if (players[socket.id] == undefined) return;
-    const newBullet = bulletData;
-    bulletData.playerId = socket.id;
+    const player = players[socket.id];
+    const newBullet = {
+      playerId: socket.id,
+      x: player.x + (player.gunWidth - 10) * Math.cos(player.facingAngle),
+      y: player.y + (player.gunWidth - 10) * Math.sin(player.facingAngle),
+      radius: 10,
+      facingAngle: player.facingAngle,
+      speed: 15,
+      speedX: Math.cos(player.facingAngle) * 15,
+      speedY: Math.sin(player.facingAngle) * 15,
+      color: player.team,
+    };
+    console.log(newBullet);
     bullets.push(newBullet);
   });
 
@@ -89,13 +95,13 @@ io.on('connection', (socket) => {
     if (players[socket.id] == undefined) return;
     players[socket.id].flag = null;
     console.log(players[socket.id]);
-    if (players[socket.id].teamColor === team.RED) {
+    if (players[socket.id].team === team.RED) {
       points.red += 1;
       if (points.red >= 2) {
         io.emit('gameOver', 'Red');
         reset();
       }
-    } else if (players[socket.id].teamColor === team.BLUE) {
+    } else if (players[socket.id].team === team.BLUE) {
       points.blue += 1;
       if (points.blue >= 2) {
         io.emit('gameOver', 'Blue');
@@ -130,8 +136,8 @@ setInterval(() => {
   }
 }, 1000);
 
-// Check bullets
-function CheckBullets() {
+// Update bullets
+function UpdateBullets() {
   bullets.forEach((bullet, i) => {
     bullet.x += bullet.speedX;
     bullet.y += bullet.speedY;
@@ -173,7 +179,7 @@ function CheckBullets() {
     });
   });
 
-  io.emit('bulletsUpdate', bullets);
+  io.emit('updateBullets', bullets);
 }
 
 function reset() {
@@ -182,4 +188,4 @@ function reset() {
   nextTeam = team.RED;
 }
 
-setInterval(CheckBullets, 16);
+setInterval(UpdateBullets, 16);
