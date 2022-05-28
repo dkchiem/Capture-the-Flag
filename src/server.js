@@ -145,8 +145,16 @@ function reset() {
 // Update bullets
 function UpdateBullets() {
   bullets.forEach((bullet, i) => {
-    bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
-    bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
+    const newBulletX = bullet.x + bullet.speed * Math.cos(bullet.facingAngle);
+    const newBulletY = bullet.y + bullet.speed * Math.sin(bullet.facingAngle);
+
+    if (
+      mapData[Math.floor(newBulletY / tileSize)][
+        Math.floor(newBulletX / tileSize)
+      ] === 1
+    ) {
+      bullets.splice(i, 1);
+    }
 
     for (const id in players) {
       if (bullet.playerId != id) {
@@ -167,22 +175,28 @@ function UpdateBullets() {
       }
     }
 
-    mapData.forEach((row, y) => {
-      row.forEach((block, x) => {
-        if (block === 1) {
-          const blockX = x * tileSize;
-          const blockY = y * tileSize;
-          if (
-            bullet.x + bullet.radius >= blockX &&
-            bullet.x - bullet.radius <= blockX + tileSize &&
-            bullet.y + bullet.radius >= blockY &&
-            bullet.y - bullet.radius <= blockY + tileSize
-          ) {
-            bullets.splice(i, 1);
-          }
-        }
-      });
-    });
+    bullet.x = newBulletX;
+    bullet.y = newBulletY;
+
+    // bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
+    // bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
+
+    // mapData.forEach((row, y) => {
+    //   row.forEach((block, x) => {
+    //     if (block === 1) {
+    //       const blockX = x * tileSize;
+    //       const blockY = y * tileSize;
+    //       if (
+    //         bullet.x + bullet.radius >= blockX &&
+    //         bullet.x - bullet.radius <= blockX + tileSize &&
+    //         bullet.y + bullet.radius >= blockY &&
+    //         bullet.y - bullet.radius <= blockY + tileSize
+    //       ) {
+    //         bullets.splice(i, 1);
+    //       }
+    //     }
+    //   });
+    // });
   });
 
   io.emit('updateBullets', bullets);

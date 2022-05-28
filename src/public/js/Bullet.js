@@ -26,23 +26,23 @@ export class Bullet {
       ctx.restore();
 
       // // Collision detection
-      this.map.mapData.forEach((row, y) => {
-        row.forEach((block, x) => {
-          if (block === 1) {
-            const blockX = x * tileSize;
-            const blockY = y * tileSize;
+      // this.map.mapData.forEach((row, y) => {
+      //   row.forEach((block, x) => {
+      //     if (block === 1) {
+      //       const blockX = x * tileSize;
+      //       const blockY = y * tileSize;
 
-            if (
-              this.x + this.radius >= blockX &&
-              this.x - this.radius <= blockX + tileSize &&
-              this.y + this.radius >= blockY &&
-              this.y - this.radius <= blockY + tileSize
-            ) {
-              this.destroy();
-            }
-          }
-        });
-      });
+      //       if (
+      //         this.x + this.radius >= blockX &&
+      //         this.x - this.radius <= blockX + tileSize &&
+      //         this.y + this.radius >= blockY &&
+      //         this.y - this.radius <= blockY + tileSize
+      //       ) {
+      //         this.destroy();
+      //       }
+      //     }
+      //   });
+      // });
     }
   }
 

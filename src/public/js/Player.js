@@ -191,6 +191,7 @@ export class Player {
     this.y = this.map.getSpawnPoint(this.team).y + tileSize / 2;
     this.flag.hidden = false;
     this.flag = null;
+    this.hp = 100;
     if (this.client) {
       updateHpBar(100);
     }
