@@ -36,12 +36,13 @@ io.on('connection', (socket) => {
   const newPlayerTeam = playerTeam.next().value;
 
   // Initialize player game
-  socket.emit('newGameData', { team: newPlayerTeam, map: mapData });
+  socket.emit('newGameData', { team: newPlayerTeam, map: mapData, points });
 
   // Add new player
   socket.on('newPlayer', (PlayerData) => {
     players[socket.id] = {
       ...PlayerData,
+      hp: 100,
       team: newPlayerTeam,
     };
     io.emit('updatePlayers', players);
@@ -71,19 +72,17 @@ io.on('connection', (socket) => {
   socket.on('shootBullet', () => {
     if (players[socket.id] == undefined) return;
     const player = players[socket.id];
-    const newBullet = {
+    bullets.push({
       playerId: socket.id,
       x: player.x + (player.gunWidth - 10) * Math.cos(player.facingAngle),
       y: player.y + (player.gunWidth - 10) * Math.sin(player.facingAngle),
       radius: 10,
       facingAngle: player.facingAngle,
       speed: 15,
-      speedX: Math.cos(player.facingAngle) * 15,
-      speedY: Math.sin(player.facingAngle) * 15,
       color: player.team,
-    };
-    console.log(newBullet);
-    bullets.push(newBullet);
+      damage: 10,
+    });
+    io.emit('updateBullets', bullets);
   });
 
   socket.on('pickupFlag', (flagData) => {
@@ -139,17 +138,24 @@ setInterval(() => {
   }
 }, 1000);
 
+// Reset game
+function reset() {
+  points = { red: 0, blue: 0 };
+  bullets = [];
+  nextTeam = team.RED;
+}
+
 // Update bullets
 function UpdateBullets() {
   bullets.forEach((bullet, i) => {
-    bullet.x += bullet.speedX;
-    bullet.y += bullet.speedY;
+    bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
+    bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
 
     for (const id in players) {
       if (bullet.playerId != id) {
-        var dx = players[id].x - bullet.x;
-        var dy = players[id].y - bullet.y;
-        var distance = Math.sqrt(dx * dx + dy * dy);
+        const dx = players[id].x - bullet.x;
+        const dy = players[id].y - bullet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < players[id].radius) {
           io.emit('playerHit', id);
           players[id].hp -= bullet.damage;
@@ -185,10 +191,9 @@ function UpdateBullets() {
   io.emit('updateBullets', bullets);
 }
 
-function reset() {
-  points = { red: 0, blue: 0 };
-  bullets = [];
-  nextTeam = team.RED;
-}
-
 setInterval(UpdateBullets, 16);
+
+// Update all bullets on all clients
+setInterval(() => {
+  io.emit('updateBullets', bullets);
+}, 80);

@@ -3,6 +3,7 @@ import { Player } from './Player.js';
 import { Camera } from './Camera.js';
 import { Bullet } from './Bullet.js';
 import { tileSize, team, direction } from './constants.js';
+import { updateLeaderboard } from './gui.js';
 
 const socket = io();
 const canvas = document.querySelector('canvas');
@@ -30,12 +31,14 @@ socket.on('newGameData', (gameData) => {
   socket.emit('newPlayer', {
     x: clientPlayer.x,
     y: clientPlayer.y,
+    radius: clientPlayer.radius,
     gunWidth: clientPlayer.gunWidth,
     facingAngle: clientPlayer.facingAngle,
     speed: clientPlayer.speed,
   });
 
   setup();
+  updateLeaderboard(gameData.points);
   render();
 });
 
@@ -143,10 +146,7 @@ socket.on('dropFlag', (flagData) => {
 
 // Listen for hide flag events
 socket.on('updateFlag', (flagData) => {
-  const redPointsText = document.querySelector('#red-points');
-  const bluePointsText = document.querySelector('#blue-points');
-  redPointsText.innerText = flagData.points.red;
-  bluePointsText.innerText = flagData.points.blue;
+  updateLeaderboard(flagData.points);
   map.items[flagData.index].hidden = flagData.item.hidden;
 });
 
@@ -192,23 +192,10 @@ function setup() {
 
   // Shoot client player bullet
   addEventListener('click', (e) => {
-    // const bullet = new Bullet(
-    //   clientPlayer.x +
-    //     (clientPlayer.gunWidth - 10) * Math.cos(clientPlayer.facingAngle),
-    //   clientPlayer.y +
-    //     (clientPlayer.gunWidth - 10) * Math.sin(clientPlayer.facingAngle),
-    //   10,
-    //   clientPlayer.facingAngle,
-    //   1,
-    //   clientPlayer.teamColor,
-    //   map,
-    //   clientPlayer,
-    // );
-    // shotBullets.push(bullet);
     socket.emit('shootBullet');
   });
 
-  // Move players
+  // Move players and bullets
   setInterval(() => {
     clientPlayer.move(controller);
     for (const id in otherPlayers) {
@@ -218,7 +205,11 @@ function setup() {
       if (otherPlayer.movingY)
         otherPlayer.y += otherPlayer.speed * Math.sin(otherPlayer.movingAngle);
     }
-  }, 20);
+    shotBullets.forEach((bullet) => {
+      bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
+      bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
+    });
+  }, 16);
 
   // Send new player position to server
   setInterval(() => {

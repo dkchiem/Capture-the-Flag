@@ -12,7 +12,6 @@ export class Bullet {
     this.color = color;
     this.map = map;
     this.destroyed = false;
-    this.damage = 10;
   }
 
   draw(ctx) {
@@ -26,37 +25,24 @@ export class Bullet {
       ctx.fill();
       ctx.restore();
 
-      // Map border collision
-      // if (
-      //   this.x < 0 ||
-      //   this.y < 0 ||
-      //   this.x > this.map.width ||
-      //   this.y > this.map.height
-      // ) {
-      //   this.destroy();
-      // }
-
       // // Collision detection
-      // this.map.mapData.forEach((row, y) => {
-      //   row.forEach((block, x) => {
-      //     if (block === 1) {
-      //       const blockX = x * tileSize;
-      //       const blockY = y * tileSize;
+      this.map.mapData.forEach((row, y) => {
+        row.forEach((block, x) => {
+          if (block === 1) {
+            const blockX = x * tileSize;
+            const blockY = y * tileSize;
 
-      //       if (
-      //         this.x + this.radius >= blockX &&
-      //         this.x - this.radius <= blockX + tileSize &&
-      //         this.y + this.radius >= blockY &&
-      //         this.y - this.radius <= blockY + tileSize
-      //       ) {
-      //         this.destroy();
-      //       }
-      //     }
-      //   });
-      // });
-
-      // this.x += this.speedX;
-      // this.y += this.speedY;
+            if (
+              this.x + this.radius >= blockX &&
+              this.x - this.radius <= blockX + tileSize &&
+              this.y + this.radius >= blockY &&
+              this.y - this.radius <= blockY + tileSize
+            ) {
+              this.destroy();
+            }
+          }
+        });
+      });
     }
   }
 
