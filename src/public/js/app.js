@@ -32,6 +32,7 @@ socket.on('newGameData', (gameData) => {
     y: clientPlayer.y,
     gunWidth: clientPlayer.gunWidth,
     facingAngle: clientPlayer.facingAngle,
+    speed: clientPlayer.speed,
   });
 
   setup();
@@ -70,25 +71,27 @@ socket.on('updatePlayers', (playersData) => {
       }
     }
 
-    // Update position of other players
-    // if (id != socket.id) {
-    //   otherPlayers[id].x = playersData[id].x;
-    //   otherPlayers[id].y = playersData[id].y;
-    //   otherPlayers[id].facingAngle = playersData[id].facingAngle;
-    // }
+    let waitNextPacket;
 
-    for (const id in otherPlayers) {
-      const player = otherPlayers[id];
-      if (player.x != undefined) {
-        player.x += (player.targetX - player.x) * 0.16;
-        player.y += (player.targetY - player.y) * 0.16;
-        // Interpolate angle while avoiding the positive/negative issue
-        const dir = (player.targetFacingAngle - p.rotation) / (Math.PI * 2);
-        dir -= Math.round(dir);
-        dir = dir * Math.PI * 2;
-        p.rotation += dir * 0.16;
-      }
+    setInterval(() => {
+      playersData[id].movingAngle;
+      playersData[id].speed;
+    }, 20);
+
+    // Update position of other players
+    if (id != socket.id) {
+      otherPlayers[id].x = playersData[id].x;
+      otherPlayers[id].y = playersData[id].y;
+      otherPlayers[id].facingAngle = playersData[id].facingAngle;
     }
+
+    // for (const id in otherPlayers) {
+    //   const player = otherPlayers[id];
+    //   if (playersData[id] != undefined) {
+    //     player.x += (playersData[id].x - player.x) * 0.1;
+    //     player.y += (playersData[id].y - player.y) * 0.1;
+    //   }
+    // }
   }
 
   // Check if a player is missing and delete them
@@ -217,12 +220,18 @@ function setup() {
     socket.emit('shootBullet');
   });
 
+  // Move client player
+  setInterval(() => {
+    clientPlayer.move(controller);
+  }, 20);
+
   // Send new player position to server
   setInterval(() => {
     socket.emit('movePlayer', {
       x: clientPlayer.x,
       y: clientPlayer.y,
       facingAngle: clientPlayer.facingAngle,
+      movingAngle: clientPlayer.movingAngle,
     });
   }, 100);
 }
@@ -237,7 +246,6 @@ export function render() {
     bullet.draw(ctx);
   });
   clientPlayer.draw(ctx, socket);
-  clientPlayer.move(controller);
   for (const id in otherPlayers) {
     otherPlayers[id].draw(ctx, socket);
   }

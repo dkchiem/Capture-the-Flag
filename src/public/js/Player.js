@@ -30,6 +30,7 @@ export class Player {
     this.client = client;
     this.alpha = 1;
     this.hp = 100;
+    this.movingAngle;
 
     setInterval(() => {
       if (this.hp < 100) {
@@ -117,50 +118,17 @@ export class Player {
   }
 
   move(controller) {
-    Object.keys(controller).forEach((key) => {
-      if (controller[key]) {
-        switch (key) {
-          case direction.UP:
-            if (!this.didCollide(1, direction.UP)) {
-              this.y = clamp(
-                this.y - this.speed,
-                0,
-                tileSize * this.map.mapData.length - tileSize,
-              );
-            }
-            break;
-          case direction.DOWN:
-            if (!this.didCollide(1, direction.DOWN)) {
-              this.y = clamp(
-                this.y + this.speed,
-                0,
-                tileSize * this.map.mapData.length - tileSize,
-              );
-            }
-            break;
-          case direction.LEFT:
-            if (!this.didCollide(1, direction.LEFT)) {
-              this.x = clamp(
-                this.x - this.speed,
-                0,
-                tileSize * this.map.mapData[0].length - tileSize,
-              );
-            }
-            break;
-          case direction.RIGHT:
-            if (!this.didCollide(1, direction.RIGHT)) {
-              this.x = clamp(
-                this.x + this.speed,
-                0,
-                tileSize * this.map.mapData[0].length - tileSize,
-              );
-            }
-            break;
-          default:
-            break;
-        }
-      }
-    });
+    if (Object.values(controller).includes(true)) {
+      let moveX = 0;
+      let moveY = 0;
+      if (controller.w) moveY--;
+      if (controller.s) moveY++;
+      if (controller.d) moveX++;
+      if (controller.a) moveX--;
+      this.movingAngle = Math.atan2(moveY, moveX);
+      this.x += this.speed * Math.cos(this.movingAngle);
+      this.y += this.speed * Math.sin(this.movingAngle);
+    }
   }
 
   didCollide(blockNumber, movingDirection) {
