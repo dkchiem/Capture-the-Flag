@@ -138,15 +138,12 @@ socket.on('playerDead', (id) => {
 
 socket.on('pickupFlag', (flagData) => {
   otherPlayers[flagData.playerId].flag = map.items[flagData.index];
+  map.items[flagData.index].hidden = flagData.item.hidden;
 });
 
 socket.on('dropFlag', (flagData) => {
-  otherPlayers[flagData.playerId].flag = null;
-});
-
-// Listen for hide flag events
-socket.on('updateFlag', (flagData) => {
   updateLeaderboard(flagData.points);
+  otherPlayers[flagData.playerId].flag = null;
   map.items[flagData.index].hidden = flagData.item.hidden;
 });
 
@@ -224,7 +221,7 @@ function setup() {
   }, 80);
 }
 
-export function render() {
+function render() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   camera.follow(clientPlayer, map);

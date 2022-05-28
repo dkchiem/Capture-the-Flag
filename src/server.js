@@ -88,7 +88,6 @@ io.on('connection', (socket) => {
   socket.on('pickupFlag', (flagData) => {
     if (players[socket.id] == undefined) return;
     players[socket.id].flag = flagData.item;
-    io.emit('updateFlag', { ...flagData, points });
     socket.broadcast.emit('updatePlayers', players);
     socket.broadcast.emit('pickupFlag', flagData);
   });
@@ -96,7 +95,6 @@ io.on('connection', (socket) => {
   socket.on('dropFlag', (flagData) => {
     if (players[socket.id] == undefined) return;
     players[socket.id].flag = null;
-    console.log(players[socket.id]);
     if (players[socket.id].team === team.RED) {
       points.red += 1;
       if (points.red >= 2) {
@@ -110,9 +108,8 @@ io.on('connection', (socket) => {
         reset();
       }
     }
-    io.emit('updateFlag', { ...flagData, points });
     socket.broadcast.emit('updatePlayers', players);
-    socket.broadcast.emit('dropFlag', flagData);
+    io.emit('dropFlag', { ...flagData, points });
   });
 
   // socket.on('createRoom', (room) => {

@@ -148,8 +148,6 @@ export class Player {
         this.movingY = false;
       }
 
-      console.log(speedX, speedY);
-
       this.x += speedX;
       this.y += speedY;
     } else {
@@ -191,6 +189,8 @@ export class Player {
   respawn() {
     this.x = this.map.getSpawnPoint(this.team).x + tileSize / 2;
     this.y = this.map.getSpawnPoint(this.team).y + tileSize / 2;
+    this.flag.hidden = false;
+    this.flag = null;
     if (this.client) {
       updateHpBar(100);
     }

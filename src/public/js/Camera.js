@@ -13,7 +13,6 @@ export class Camera {
           : map.width - canvas.width,
       ),
     );
-    // console.log(this.x);
     this.y = Math.round(
       clamp(
         player.y - canvas.height / 2,
