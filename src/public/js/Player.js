@@ -1,5 +1,5 @@
 import { tileSize, direction, team } from './constants.js';
-import { clamp } from './utils.js';
+import { round } from './utils.js';
 import { texture } from './textures.js';
 
 function updateHpBar(hp) {
@@ -30,6 +30,8 @@ export class Player {
     this.client = client;
     this.alpha = 1;
     this.hp = 100;
+    this.movingX = false;
+    this.movingY = false;
     this.movingAngle;
 
     setInterval(() => {
@@ -119,66 +121,65 @@ export class Player {
 
   move(controller) {
     if (Object.values(controller).includes(true)) {
+      this.movingX = true;
+      this.movingY = true;
       let moveX = 0;
       let moveY = 0;
+
       if (controller.w) moveY--;
       if (controller.s) moveY++;
       if (controller.d) moveX++;
       if (controller.a) moveX--;
+
       this.movingAngle = Math.atan2(moveY, moveX);
-      this.x += this.speed * Math.cos(this.movingAngle);
-      this.y += this.speed * Math.sin(this.movingAngle);
+
+      let speedX =
+        moveX != 0 ? round(this.speed * Math.cos(this.movingAngle), 2) : 0;
+      let speedY =
+        moveY != 0 ? round(this.speed * Math.sin(this.movingAngle), 2) : 0;
+
+      if (this.didCollideX(1, speedX)) speedX = 0;
+      if (this.didCollideY(1, speedY)) speedY = 0;
+
+      if (speedX === 0) {
+        this.movingX = false;
+      }
+      if (speedY === 0) {
+        this.movingY = false;
+      }
+
+      console.log(speedX, speedY);
+
+      this.x += speedX;
+      this.y += speedY;
+    } else {
+      this.movingX = false;
+      this.movingY = false;
     }
   }
 
-  didCollide(blockNumber, movingDirection) {
-    switch (movingDirection) {
-      case direction.UP:
-        const upValue1 = this.map.getTileAt(
-          this.x - this.radius + 1,
-          this.y - this.radius - this.speed,
-        );
-        const upValue2 = this.map.getTileAt(
-          this.x + this.radius - 1,
-          this.y - this.radius - this.speed,
-        );
-        return upValue1 === 1 || upValue2 === 1;
+  didCollideX(blockNumber, speed) {
+    const bumper1 = this.map.getTileAt(
+      speed < 0 ? this.x - this.radius + speed : this.x + this.radius + speed,
+      this.y - this.radius + 1,
+    );
+    const bumper2 = this.map.getTileAt(
+      speed < 0 ? this.x - this.radius + speed : this.x + this.radius + speed,
+      this.y + this.radius - 1,
+    );
+    return bumper1 === 1 || bumper2 === 1;
+  }
 
-      case direction.RIGHT:
-        const rightValue1 = this.map.getTileAt(
-          this.x + this.radius,
-          this.y - this.radius + 1,
-        );
-        const rightValue2 = this.map.getTileAt(
-          this.x + this.radius,
-          this.y + this.radius - 1,
-        );
-        return rightValue1 === 1 || rightValue2 === 1;
-
-      case direction.DOWN:
-        const downValue1 = this.map.getTileAt(
-          this.x - this.radius + 1,
-          this.y + this.radius,
-        );
-        const downValue2 = this.map.getTileAt(
-          this.x + this.radius - 1,
-          this.y + this.radius,
-        );
-        return downValue1 === 1 || downValue2 === 1;
-
-      case direction.LEFT:
-        const leftValue1 = this.map.getTileAt(
-          this.x - this.radius - this.speed,
-          this.y - this.radius + 1,
-        );
-        const leftValue2 = this.map.getTileAt(
-          this.x - this.radius - this.speed,
-          this.y + this.radius - 1,
-        );
-        return leftValue1 === 1 || leftValue2 === 1;
-      default:
-        return false;
-    }
+  didCollideY(blockNumber, speed) {
+    const bumper1 = this.map.getTileAt(
+      this.x - this.radius + 1,
+      speed < 0 ? this.y - this.radius + speed : this.y + this.radius + speed,
+    );
+    const bumper2 = this.map.getTileAt(
+      this.x + this.radius - 1,
+      speed < 0 ? this.y - this.radius + speed : this.y + this.radius + speed,
+    );
+    return bumper1 === 1 || bumper2 === 1;
   }
 
   hit() {

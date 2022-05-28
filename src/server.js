@@ -61,6 +61,8 @@ io.on('connection', (socket) => {
     player.x = positionData.x;
     player.y = positionData.y;
     player.facingAngle = positionData.facingAngle;
+    player.movingX = positionData.movingX;
+    player.movingY = positionData.movingY;
     player.movingAngle = positionData.movingAngle;
     socket.broadcast.emit('updatePlayers', players);
   });

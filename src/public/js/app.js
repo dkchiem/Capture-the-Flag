@@ -71,27 +71,15 @@ socket.on('updatePlayers', (playersData) => {
       }
     }
 
-    let waitNextPacket;
-
-    setInterval(() => {
-      playersData[id].movingAngle;
-      playersData[id].speed;
-    }, 20);
-
-    // Update position of other players
+    // Update player data of other players
     if (id != socket.id) {
       otherPlayers[id].x = playersData[id].x;
       otherPlayers[id].y = playersData[id].y;
+      otherPlayers[id].movingX = playersData[id].movingX;
+      otherPlayers[id].movingY = playersData[id].movingY;
+      otherPlayers[id].movingAngle = playersData[id].movingAngle;
       otherPlayers[id].facingAngle = playersData[id].facingAngle;
     }
-
-    // for (const id in otherPlayers) {
-    //   const player = otherPlayers[id];
-    //   if (playersData[id] != undefined) {
-    //     player.x += (playersData[id].x - player.x) * 0.1;
-    //     player.y += (playersData[id].y - player.y) * 0.1;
-    //   }
-    // }
   }
 
   // Check if a player is missing and delete them
@@ -220,9 +208,16 @@ function setup() {
     socket.emit('shootBullet');
   });
 
-  // Move client player
+  // Move players
   setInterval(() => {
     clientPlayer.move(controller);
+    for (const id in otherPlayers) {
+      const otherPlayer = otherPlayers[id];
+      if (otherPlayer.movingX)
+        otherPlayer.x += otherPlayer.speed * Math.cos(otherPlayer.movingAngle);
+      if (otherPlayer.movingY)
+        otherPlayer.y += otherPlayer.speed * Math.sin(otherPlayer.movingAngle);
+    }
   }, 20);
 
   // Send new player position to server
@@ -231,9 +226,11 @@ function setup() {
       x: clientPlayer.x,
       y: clientPlayer.y,
       facingAngle: clientPlayer.facingAngle,
+      movingX: clientPlayer.movingX,
+      movingY: clientPlayer.movingY,
       movingAngle: clientPlayer.movingAngle,
     });
-  }, 100);
+  }, 80);
 }
 
 export function render() {
