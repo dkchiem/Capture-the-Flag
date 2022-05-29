@@ -225,7 +225,7 @@ function setup() {
       movingAngle: clientPlayer.movingAngle,
       speed: clientPlayer.speed,
     });
-  }, 32);
+  }, 48);
 }
 
 function render() {

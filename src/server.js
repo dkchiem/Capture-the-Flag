@@ -188,7 +188,7 @@ setInterval(UpdateBullets, 16);
 // Update all player positions
 setInterval(() => {
   io.emit('updatePlayers', players);
-}, 32);
+}, 48);
 
 // Update all bullets on all clients
 setInterval(() => {
