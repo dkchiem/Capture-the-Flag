@@ -12,6 +12,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const winningPoints = 3;
 const players = {};
 let nextBulletID = 0;
 let bullets = {};
@@ -66,7 +67,7 @@ io.on('connection', (socket) => {
     player.movingX = positionData.movingX;
     player.movingY = positionData.movingY;
     player.movingAngle = positionData.movingAngle;
-    socket.broadcast.emit('updatePlayers', players);
+    player.speed = positionData.speed;
   });
 
   // Shoot bullet
@@ -98,14 +99,14 @@ io.on('connection', (socket) => {
     if (players[socket.id] == undefined) return;
     players[socket.id].flag = null;
     if (players[socket.id].team === team.RED) {
-      points.red += 1;
-      if (points.red >= 2) {
+      points.red++;
+      if (points.red >= winningPoints) {
         io.emit('gameOver', 'Red');
         reset();
       }
     } else if (players[socket.id].team === team.BLUE) {
-      points.blue += 1;
-      if (points.blue >= 2) {
+      points.blue++;
+      if (points.blue >= winningPoints) {
         io.emit('gameOver', 'Blue');
         reset();
       }
@@ -130,7 +131,7 @@ setInterval(() => {
   for (const id in players) {
     if (players[id]) {
       if (players[id].hp < 100) {
-        players[id].hp += 1;
+        players[id].hp++;
         io.emit('updatePlayers', players);
       }
     }
@@ -183,6 +184,11 @@ function UpdateBullets() {
 }
 
 setInterval(UpdateBullets, 16);
+
+// Update all player positions
+setInterval(() => {
+  io.emit('updatePlayers', players);
+}, 32);
 
 // Update all bullets on all clients
 setInterval(() => {

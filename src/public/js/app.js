@@ -3,7 +3,7 @@ import { Player } from './Player.js';
 import { Camera } from './Camera.js';
 import { Bullet } from './Bullet.js';
 import { tileSize, team, direction } from './constants.js';
-import { updateLeaderboard } from './gui.js';
+import { updateLeaderboard, updateHpBar } from './gui.js';
 
 const socket = io();
 const canvas = document.querySelector('canvas');
@@ -69,6 +69,7 @@ socket.on('updatePlayers', (playersData) => {
     if (playersData[id]) {
       if (id === socket.id) {
         clientPlayer.hp = playersData[id].hp;
+        updateHpBar(clientPlayer.hp);
       } else {
         otherPlayers[id].hp = playersData[id].hp;
       }
@@ -98,6 +99,8 @@ socket.on('updateBullets', (serverBullets) => {
   for (const id in serverBullets) {
     const bulletData = serverBullets[id];
     if (bullets[id] == undefined) {
+      const shootSound = new Audio('/sounds/shoot.wav');
+      shootSound.play();
       bullets[id] = new Bullet(
         bulletData.x,
         bulletData.y,
@@ -131,6 +134,8 @@ socket.on('playerHit', (id) => {
 
 // Listen for player dead events
 socket.on('playerDead', (id) => {
+  const deathSound = new Audio('/sounds/death.flac');
+  deathSound.play();
   if (id === socket.id) {
     clientPlayer.respawn();
   } else {
@@ -140,13 +145,11 @@ socket.on('playerDead', (id) => {
 
 socket.on('pickupFlag', (flagData) => {
   otherPlayers[flagData.playerId].flag = map.items[flagData.index];
-  map.items[flagData.index].hidden = flagData.item.hidden;
 });
 
 socket.on('dropFlag', (flagData) => {
   updateLeaderboard(flagData.points);
   otherPlayers[flagData.playerId].flag = null;
-  map.items[flagData.index].hidden = flagData.item.hidden;
 });
 
 // Listen for gameover events
@@ -220,8 +223,9 @@ function setup() {
       movingX: clientPlayer.movingX,
       movingY: clientPlayer.movingY,
       movingAngle: clientPlayer.movingAngle,
+      speed: clientPlayer.speed,
     });
-  }, 80);
+  }, 32);
 }
 
 function render() {

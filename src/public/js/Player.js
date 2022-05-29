@@ -1,18 +1,7 @@
 import { tileSize, direction, team } from './constants.js';
 import { round } from './utils.js';
 import { texture } from './textures.js';
-
-function updateHpBar(hp) {
-  const hpBar = document.querySelector('#hp');
-  hpBar.style.width = hp >= 0 ? `${hp}%` : '0%';
-  if (hp <= 100 && hp > 50) {
-    hpBar.style.backgroundColor = '#6bcb77';
-  } else if (hp <= 50 && hp > 20) {
-    hpBar.style.backgroundColor = '#FFD93D';
-  } else if (hp <= 20) {
-    hpBar.style.backgroundColor = '#FF6B6B';
-  }
-}
+import { updateHpBar } from './gui.js';
 
 export class Player {
   constructor(name, team, radius, facingAngle, speed, map, client) {
@@ -33,15 +22,6 @@ export class Player {
     this.movingX = false;
     this.movingY = false;
     this.movingAngle;
-
-    setInterval(() => {
-      if (this.hp < 100) {
-        this.hp++;
-        if (this.client) {
-          updateHpBar(this.hp);
-        }
-      }
-    }, 1000);
   }
 
   draw(ctx, socket) {
@@ -54,32 +34,48 @@ export class Player {
           this.y + this.radius >= item.y &&
           this.y - this.radius <= item.y + item.height
         ) {
-          if (item.type === 'flag' && item.team != this.team && this.client) {
-            item.hidden = true;
-            this.flag = item;
-            socket.emit('pickupFlag', {
-              item,
-              index: i,
-              playerId: socket.id,
-            });
-          }
-          if (
-            item.type === 'chest' &&
-            item.team === this.team &&
-            this.flag != null &&
-            this.client
-          ) {
-            item.texture = texture.openChest;
-            this.flag.hidden = false;
-            this.flag = null;
-            socket.emit('dropFlag', {
-              item,
-              index: i,
-              playerId: socket.id,
-            });
-            setTimeout(() => {
-              item.texture = texture.closeChest;
-            }, 2000);
+          switch (item.type) {
+            case 'flag':
+              if (item.team != this.team && this.client) {
+                item.hidden = true;
+                this.flag = item;
+                socket.emit('pickupFlag', {
+                  item,
+                  index: i,
+                  playerId: socket.id,
+                });
+              }
+              break;
+
+            case 'chest':
+              if (item.team === this.team && this.flag != null && this.client) {
+                const openChestSound = new Audio('/sounds/chest-open.wav');
+                openChestSound.play();
+                item.texture = texture.openChest;
+                this.flag.hidden = false;
+                this.flag = null;
+                socket.emit('dropFlag', {
+                  index: i,
+                  playerId: socket.id,
+                });
+                setTimeout(() => {
+                  const closeChestSound = new Audio('/sounds/chest-close.wav');
+                  closeChestSound.play();
+                  item.texture = texture.closeChest;
+                }, 2000);
+              }
+              break;
+
+            case 'speed-boost':
+              item.hidden = true;
+              this.speed += 0.3;
+              setTimeout(() => {
+                this.speed -= 0.3;
+              }, 7000);
+              break;
+
+            default:
+              break;
           }
         }
       });
@@ -110,13 +106,31 @@ export class Player {
       ctx.rotate(this.facingAngle - Math.PI / 2);
       ctx.drawImage(
         this.flag.texture,
-        -tileSize / 2,
-        -tileSize,
+        -this.radius,
+        -this.radius * 2,
         tileSize,
         tileSize,
       );
       ctx.restore();
     }
+
+    // HP
+    ctx.save();
+    if (this.hp <= 100 && this.hp > 50) {
+      ctx.fillStyle = '#6BCB77';
+    } else if (this.hp <= 50 && this.hp > 20) {
+      ctx.fillStyle = '#FFD93D';
+    } else {
+      ctx.fillStyle = '#FF6B6B';
+    }
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 0.2;
+    ctx.font = '35px Bebas Neue';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.hp, this.x, this.y + 2);
+    ctx.strokeText(this.hp, this.x, this.y + 2);
+    ctx.restore();
   }
 
   move(controller) {

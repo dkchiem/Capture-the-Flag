@@ -8,22 +8,18 @@ export class Map {
     this.width = this.mapData[0].length * tileSize;
     this.height = this.mapData.length * tileSize;
     this.items = [];
+    this.redSpawnpoints = [];
+    this.blueSpawnpoints = [];
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
         switch (block) {
+          case 3:
+            this.blueSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
+            break;
+
           case 4:
-            this.items.push(
-              new Item(
-                'flag',
-                x * tileSize,
-                y * tileSize,
-                tileSize,
-                tileSize,
-                texture.blueFlag,
-                team.BLUE,
-              ),
-            );
+            this.redSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
             break;
 
           case 5:
@@ -36,6 +32,20 @@ export class Map {
                 tileSize,
                 texture.redFlag,
                 team.RED,
+              ),
+            );
+            break;
+
+          case 6:
+            this.items.push(
+              new Item(
+                'flag',
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize,
+                texture.blueFlag,
+                team.BLUE,
               ),
             );
             break;
@@ -64,6 +74,19 @@ export class Map {
                 tileSize,
                 texture.closeChest,
                 team.RED,
+              ),
+            );
+            break;
+
+          case 9:
+            this.items.push(
+              new Item(
+                'speed-boost',
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize,
+                texture.bolt,
               ),
             );
             break;
@@ -83,11 +106,12 @@ export class Map {
         ctx.save();
         switch (block) {
           case 0:
-            ctx.fillStyle = ctx.createPattern(texture.grass, 'repeat');
+          case 9:
+            ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
             break;
 
           case 1:
-            ctx.fillStyle = ctx.createPattern(texture.rocks, 'repeat');
+            ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
             break;
 
           case 2:
@@ -97,7 +121,7 @@ export class Map {
           case 6:
           case 7:
           case 8:
-            ctx.fillStyle = ctx.createPattern(texture.stone, 'repeat');
+            ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
             break;
 
           default:
@@ -127,20 +151,15 @@ export class Map {
   }
 
   getSpawnPoint(playerTeam) {
-    let spawnPoint = { x: 0, y: 0 };
-
-    this.mapData.forEach((row, y) => {
-      row.forEach((block, x) => {
-        if (playerTeam === team.RED && block === 6) {
-          spawnPoint = { x: x * tileSize, y: y * tileSize };
-        }
-        if (playerTeam === team.BLUE && block === 3) {
-          spawnPoint = { x: x * tileSize, y: y * tileSize };
-        }
-      });
-    });
-
-    return spawnPoint;
+    if (playerTeam === team.BLUE) {
+      return this.blueSpawnpoints[
+        Math.floor(Math.random() * this.blueSpawnpoints.length)
+      ];
+    } else if (playerTeam === team.RED) {
+      return this.redSpawnpoints[
+        Math.floor(Math.random() * this.redSpawnpoints.length)
+      ];
+    }
   }
 
   getTileAt(x, y) {
