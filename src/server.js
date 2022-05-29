@@ -16,6 +16,7 @@ const winningPoints = 3;
 const players = {};
 let nextBulletID = 0;
 let bullets = {};
+const hiddenItems = {};
 const mapData = maps[0];
 let points = { red: 0, blue: 0 };
 
@@ -29,6 +30,9 @@ app.get('/', (req, res) => {
 app.get('/game', (req, res) => {
   res.render('pages/index');
 });
+app.get('/gameover', (req, res) => {
+  res.render('pages/gameover', { query: req.query });
+});
 app.use(express.static(__dirname + '/public'));
 
 // Socket.io
@@ -38,7 +42,12 @@ io.on('connection', (socket) => {
   const newPlayerTeam = playerTeam.next().value;
 
   // Initialize player game
-  socket.emit('newGameData', { team: newPlayerTeam, map: mapData, points });
+  socket.emit('newGameData', {
+    team: newPlayerTeam,
+    map: mapData,
+    points,
+    hiddenItems,
+  });
 
   // Add new player
   socket.on('newPlayer', (PlayerData) => {
@@ -53,6 +62,8 @@ io.on('connection', (socket) => {
   // Disconnect player
   socket.on('disconnect', () => {
     console.log(`Client ${socket.id} has disconnected`);
+    delete hiddenItems[players[socket.id].flagIndex];
+    io.emit('updateHiddenItems', hiddenItems);
     delete players[socket.id];
     io.emit('updatePlayers', players);
   });
@@ -90,29 +101,37 @@ io.on('connection', (socket) => {
 
   socket.on('pickupFlag', (flagData) => {
     if (players[socket.id] == undefined) return;
-    players[socket.id].flag = flagData.item;
+    hiddenItems[flagData.index] = flagData.item;
+    io.emit('updateHiddenItems', hiddenItems);
+    players[socket.id].flagIndex = flagData.index;
     socket.broadcast.emit('updatePlayers', players);
-    socket.broadcast.emit('pickupFlag', flagData);
   });
 
-  socket.on('dropFlag', (flagData) => {
+  socket.on('dropFlag', (flagIndex) => {
     if (players[socket.id] == undefined) return;
-    players[socket.id].flag = null;
+    players[socket.id].flagIndex = null;
+    delete hiddenItems[flagIndex];
+
+    console.log(flagIndex, hiddenItems);
+
+    // Check if a team has won
     if (players[socket.id].team === team.RED) {
       points.red++;
       if (points.red >= winningPoints) {
-        io.emit('gameOver', 'Red');
+        io.emit('gameOver', 'red');
         reset();
       }
     } else if (players[socket.id].team === team.BLUE) {
       points.blue++;
       if (points.blue >= winningPoints) {
-        io.emit('gameOver', 'Blue');
+        io.emit('gameOver', 'blue');
         reset();
       }
     }
+
+    io.emit('updateHiddenItems', hiddenItems);
     socket.broadcast.emit('updatePlayers', players);
-    io.emit('dropFlag', { ...flagData, points });
+    io.emit('updatePoints', points);
   });
 
   // socket.on('createRoom', (room) => {

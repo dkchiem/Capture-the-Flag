@@ -17,32 +17,50 @@ export class Map {
     this.offScreenCanvas.width = this.width;
     this.offScreenCanvas.height = this.height;
 
+    const offScreenCtx = this.offScreenCanvas.getContext('2d');
+    offScreenCtx.save();
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
         switch (block) {
-          case 3:
-            this.blueSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
-            break;
-
-          case 4:
-            this.redSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
-            break;
-
-          case 5:
-            this.items.push(
-              new Item(
-                'flag',
-                x * tileSize,
-                y * tileSize,
-                tileSize,
-                tileSize,
-                texture.redFlag,
-                team.RED,
-              ),
+          case 0:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.woodFloor,
+              'repeat',
             );
             break;
 
+          case 1:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.steelWall,
+              'repeat',
+            );
+            break;
+
+          case 2:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.steelFloor,
+              'repeat',
+            );
+            break;
+
+          case 3:
+          case 4:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.steelFloor,
+              'repeat',
+            );
+            if (block === 3)
+              this.blueSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
+            if (block === 4)
+              this.redSpawnpoints.push({ x: x * tileSize, y: y * tileSize });
+            break;
+
+          case 5:
           case 6:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.steelFloor,
+              'repeat',
+            );
             this.items.push(
               new Item(
                 'flag',
@@ -50,27 +68,18 @@ export class Map {
                 y * tileSize,
                 tileSize,
                 tileSize,
-                texture.blueFlag,
-                team.BLUE,
+                block === 6 ? texture.blueFlag : texture.redFlag,
+                block === 6 ? team.BLUE : team.RED,
               ),
             );
             break;
 
           case 7:
-            this.items.push(
-              new Item(
-                'chest',
-                x * tileSize,
-                y * tileSize,
-                tileSize,
-                tileSize,
-                texture.closeChest,
-                team.BLUE,
-              ),
-            );
-            break;
-
           case 8:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.steelFloor,
+              'repeat',
+            );
             this.items.push(
               new Item(
                 'chest',
@@ -79,12 +88,16 @@ export class Map {
                 tileSize,
                 tileSize,
                 texture.closeChest,
-                team.RED,
+                block === 8 ? team.RED : team.BLUE,
               ),
             );
             break;
 
           case 9:
+            offScreenCtx.fillStyle = offScreenCtx.createPattern(
+              texture.woodFloor,
+              'repeat',
+            );
             this.items.push(
               new Item(
                 'speed-boost',
@@ -100,50 +113,20 @@ export class Map {
           default:
             break;
         }
-      });
-    });
 
-    const ctx = this.offScreenCanvas.getContext('2d');
-    ctx.save();
-    this.mapData.forEach((row, y) => {
-      row.forEach((block, x) => {
-        switch (block) {
-          case 0:
-          case 9:
-            ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
-            break;
-
-          case 1:
-            ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
-            break;
-
-          case 2:
-          case 3:
-          case 4:
-          case 5:
-          case 6:
-          case 7:
-          case 8:
-            ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
-            break;
-
-          default:
-            break;
-        }
-
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        offScreenCtx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block outline
-        // ctx.strokeStyle = 'yellow';
-        // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        // offScreenCtx.strokeStyle = 'yellow';
+        // offScreenCtx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
         // Development block numbers
-        // ctx.fillStyle = 'white';
-        // ctx.font = '12px Arial';
-        // ctx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
+        // offScreenCtx.fillStyle = 'white';
+        // offScreenCtx.font = '12px Arial';
+        // offScreenCtx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
       });
     });
-    ctx.restore();
+    offScreenCtx.restore();
   }
 
   draw(ctx, camera) {
@@ -172,5 +155,15 @@ export class Map {
 
   getTileAt(x, y) {
     return this.mapData[Math.floor(y / tileSize)][Math.floor(x / tileSize)];
+  }
+
+  updateHiddenItems(hiddenItems) {
+    this.items.forEach((item, i) => {
+      if (hiddenItems[i]) {
+        item.hidden = true;
+      } else {
+        item.hidden = false;
+      }
+    });
   }
 }

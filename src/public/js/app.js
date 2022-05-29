@@ -40,6 +40,7 @@ socket.on('newGameData', (gameData) => {
 
   setup();
   updateLeaderboard(gameData.points);
+  map.updateHiddenItems(gameData.hiddenItems);
   render();
 });
 
@@ -48,7 +49,7 @@ socket.on('updatePlayers', (playersData) => {
   let playersFound = {};
   for (const id in playersData) {
     // If the player hasn't been created yet
-    if (otherPlayers[id] == undefined && id != socket.id) {
+    if (otherPlayers[id] === undefined && id != socket.id) {
       const playerData = playersData[id];
       const player = new Player(
         'player',
@@ -67,13 +68,11 @@ socket.on('updatePlayers', (playersData) => {
     playersFound[id] = true;
 
     // Update hp of players
-    if (playersData[id]) {
-      if (id === socket.id) {
-        clientPlayer.hp = playersData[id].hp;
-        updateHpBar(clientPlayer.hp);
-      } else {
-        otherPlayers[id].hp = playersData[id].hp;
-      }
+    if (id === socket.id) {
+      clientPlayer.hp = playersData[id].hp;
+      updateHpBar(clientPlayer.hp);
+    } else {
+      otherPlayers[id].hp = playersData[id].hp;
     }
 
     // Update player data of other players
@@ -84,6 +83,12 @@ socket.on('updatePlayers', (playersData) => {
       otherPlayers[id].movingY = playersData[id].movingY;
       otherPlayers[id].movingAngle = playersData[id].movingAngle;
       otherPlayers[id].facingAngle = playersData[id].facingAngle;
+      // Update other player flags
+      if (playersData[id].flagIndex) {
+        otherPlayers[id].flagIndex = playersData[id].flagIndex;
+      } else {
+        otherPlayers[id].flagIndex = null;
+      }
     }
   }
 
@@ -144,24 +149,25 @@ socket.on('playerDead', (id) => {
   }
 });
 
-socket.on('pickupFlag', (flagData) => {
-  otherPlayers[flagData.playerId].flag = map.items[flagData.index];
+// Listen for update hidden items events
+socket.on('updateHiddenItems', (serverHiddenItems) => {
+  map.updateHiddenItems(serverHiddenItems);
 });
 
-socket.on('dropFlag', (flagData) => {
-  updateLeaderboard(flagData.points);
-  if (flagData.playerId != socket.id) {
-    otherPlayers[flagData.playerId].flag = null;
-  }
+// Listen for update points events
+socket.on('updatePoints', (points) => {
+  updateLeaderboard(points);
 });
 
 // Listen for gameover events
 socket.on('gameOver', (winningTeam) => {
-  alert(`${winningTeam} has won!`);
+  window.location.href = '/gameover?team=' + winningTeam;
 });
 
+/*
+ * Setup the game
+ */
 const controller = { w: false, a: false, s: false, d: false };
-
 function setup() {
   // Resize the canvas to fill the screen
   addEventListener('resize', () => {

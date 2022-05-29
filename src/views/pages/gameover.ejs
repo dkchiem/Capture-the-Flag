@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Capture the Flag</title>
+    <link rel="stylesheet" href="css/main.css" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body
+  <% if(query.team === 'red'){ %>
+    style="background-color: #E74E4E"
+  <% } else if (query.team === 'blue'){ %>  
+    style="background-color: #4E6FE7"
+  <% } %>
+  >
+    <h1><%= query.team %> won the game!</h1>
+    <a href="/game" class="button">Replay!</a>
+  </body>
+</html>

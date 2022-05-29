@@ -15,7 +15,7 @@ export class Player {
     this.speed = speed;
     this.gunWidth = 55;
     this.gunHeight = 25;
-    this.flag = null;
+    this.flagIndex = null;
     this.client = client;
     this.alpha = 1;
     this.hp = 100;
@@ -40,27 +40,25 @@ export class Player {
             case 'flag':
               if (item.team != this.team && this.client) {
                 if (!item.hidden) grabItemSound.play();
-                item.hidden = true;
-                this.flag = item;
+                this.flagIndex = i;
                 socket.emit('pickupFlag', {
                   item,
                   index: i,
-                  playerId: socket.id,
                 });
               }
               break;
 
             case 'chest':
-              if (item.team === this.team && this.flag != null && this.client) {
+              if (
+                item.team === this.team &&
+                this.flagIndex != null &&
+                this.client
+              ) {
                 const openChestSound = new Audio('/sounds/chest-open.wav');
                 openChestSound.play();
                 item.texture = texture.openChest;
-                this.flag.hidden = false;
-                this.flag = null;
-                socket.emit('dropFlag', {
-                  index: i,
-                  playerId: socket.id,
-                });
+                socket.emit('dropFlag', this.flagIndex);
+                this.flagIndex = null;
                 setTimeout(() => {
                   const closeChestSound = new Audio('/sounds/chest-close.wav');
                   closeChestSound.play();
@@ -104,12 +102,12 @@ export class Player {
     ctx.restore();
 
     // Flag
-    if (this.flag != null) {
+    if (this.flagIndex != null) {
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.facingAngle - Math.PI / 2);
       ctx.drawImage(
-        this.flag.texture,
+        this.map.items[this.flagIndex].texture,
         -this.radius,
         -this.radius * 2,
         tileSize,
@@ -207,8 +205,8 @@ export class Player {
   respawn() {
     this.x = this.map.getSpawnPoint(this.team).x + tileSize / 2;
     this.y = this.map.getSpawnPoint(this.team).y + tileSize / 2;
-    this.flag.hidden = false;
-    this.flag = null;
+    this.map.items[this.flagIndex].hidden = false;
+    this.flagIndex = null;
     this.hp = 100;
     if (this.client) {
       updateHpBar(100);
