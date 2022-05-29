@@ -38,8 +38,8 @@ export class Player {
 
           switch (item.type) {
             case 'flag':
-              if (!item.hidden) grabItemSound.play();
               if (item.team != this.team && this.client) {
+                if (!item.hidden) grabItemSound.play();
                 item.hidden = true;
                 this.flag = item;
                 socket.emit('pickupFlag', {

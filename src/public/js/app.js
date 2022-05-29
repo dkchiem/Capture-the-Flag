@@ -8,6 +8,7 @@ import { updateLeaderboard, updateHpBar } from './gui.js';
 const socket = io();
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
+resizeCanvas();
 
 const camera = new Camera();
 const bullets = {};
@@ -149,7 +150,9 @@ socket.on('pickupFlag', (flagData) => {
 
 socket.on('dropFlag', (flagData) => {
   updateLeaderboard(flagData.points);
-  otherPlayers[flagData.playerId].flag = null;
+  if (flagData.playerId != socket.id) {
+    otherPlayers[flagData.playerId].flag = null;
+  }
 });
 
 // Listen for gameover events
@@ -161,14 +164,9 @@ const controller = { w: false, a: false, s: false, d: false };
 
 function setup() {
   // Resize the canvas to fill the screen
-  resizeCanvas();
   addEventListener('resize', () => {
     resizeCanvas();
   });
-  function resizeCanvas() {
-    canvas.height = window.innerHeight;
-    canvas.width = window.innerWidth;
-  }
 
   // Client player movements
   addEventListener('keydown', (e) => {
@@ -226,6 +224,11 @@ function setup() {
       speed: clientPlayer.speed,
     });
   }, 48);
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
 
 function render() {

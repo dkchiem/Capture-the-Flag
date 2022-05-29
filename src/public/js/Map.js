@@ -2,6 +2,8 @@ import { Item } from './Item.js';
 import { tileSize, team, direction } from './constants.js';
 import { texture } from './textures.js';
 
+const canvas = document.querySelector('canvas');
+
 export class Map {
   constructor(mapData) {
     this.mapData = mapData;
@@ -10,6 +12,10 @@ export class Map {
     this.items = [];
     this.redSpawnpoints = [];
     this.blueSpawnpoints = [];
+
+    this.offScreenCanvas = document.createElement('canvas');
+    this.offScreenCanvas.width = this.width;
+    this.offScreenCanvas.height = this.height;
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
@@ -96,60 +102,59 @@ export class Map {
         }
       });
     });
+
+    const ctx = this.offScreenCanvas.getContext('2d');
+    ctx.save();
+    this.mapData.forEach((row, y) => {
+      row.forEach((block, x) => {
+        switch (block) {
+          case 0:
+          case 9:
+            ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
+            break;
+
+          case 1:
+            ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
+            break;
+
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+            ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
+            break;
+
+          default:
+            break;
+        }
+
+        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+        // Development block outline
+        // ctx.strokeStyle = 'yellow';
+        // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+        // Development block numbers
+        // ctx.fillStyle = 'white';
+        // ctx.font = '12px Arial';
+        // ctx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
+      });
+    });
+    ctx.restore();
   }
 
   draw(ctx, camera) {
+    ctx.drawImage(this.offScreenCanvas, 0, 0);
+
     ctx.save();
-
-    this.mapData.forEach((row, y) => {
-      row.forEach((block, x) => {
-        if (
-          camera.isInViewRect(x * tileSize, y * tileSize, tileSize, tileSize)
-        ) {
-          switch (block) {
-            case 0:
-            case 9:
-              ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
-              break;
-
-            case 1:
-              ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
-              break;
-
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-              ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
-              break;
-
-            default:
-              break;
-          }
-
-          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-
-          // Development block outline
-          // ctx.strokeStyle = 'yellow';
-          // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-
-          // Development block numbers
-          // ctx.fillStyle = 'white';
-          // ctx.font = '12px Arial';
-          // ctx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
-        }
-      });
-    });
-
     this.items.forEach((item) => {
       if (camera.isInViewRect(item.x, item.y, item.width, item.height)) {
         item.draw(ctx);
       }
     });
-
     ctx.restore();
   }
 
