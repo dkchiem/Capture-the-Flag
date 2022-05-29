@@ -233,13 +233,21 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   camera.follow(clientPlayer, map);
   ctx.translate(-camera.x, -camera.y);
-  map.draw(ctx);
+  map.draw(ctx, camera);
   for (const id in bullets) {
-    bullets[id].draw(ctx);
+    const bullet = bullets[id];
+    if (camera.isInViewCircle(bullet.x, bullet.y, bullet.radius)) {
+      bullet.draw(ctx);
+    }
   }
   clientPlayer.draw(ctx, socket);
   for (const id in otherPlayers) {
-    otherPlayers[id].draw(ctx, socket);
+    const otherPlayer = otherPlayers[id];
+    if (
+      camera.isInViewCircle(otherPlayer.x, otherPlayer.y, otherPlayer.radius)
+    ) {
+      otherPlayers[id].draw(ctx, socket);
+    }
   }
   requestAnimationFrame(render);
 }

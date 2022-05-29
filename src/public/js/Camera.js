@@ -3,6 +3,11 @@ import { clamp } from './utils.js';
 const canvas = document.querySelector('canvas');
 
 export class Camera {
+  constructor() {
+    this.x = 0;
+    this.y = 0;
+  }
+
   follow(player, map) {
     this.x = Math.round(
       clamp(
@@ -21,6 +26,24 @@ export class Camera {
           ? (map.height - canvas.height) / 2
           : map.height - canvas.height,
       ),
+    );
+  }
+
+  isInViewRect(x, y, width, height) {
+    return (
+      x + width > this.x &&
+      x < this.x + canvas.width &&
+      y + height > this.y &&
+      y < this.y + canvas.height
+    );
+  }
+
+  isInViewCircle(x, y, radius) {
+    return (
+      x + radius > this.x &&
+      x - radius < this.x + canvas.width &&
+      y + radius > this.y &&
+      y - radius < this.y + canvas.height
     );
   }
 }

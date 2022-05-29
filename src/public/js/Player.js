@@ -34,8 +34,11 @@ export class Player {
           this.y + this.radius >= item.y &&
           this.y - this.radius <= item.y + item.height
         ) {
+          const grabItemSound = new Audio('/sounds/grab-item.wav');
+
           switch (item.type) {
             case 'flag':
+              if (!item.hidden) grabItemSound.play();
               if (item.team != this.team && this.client) {
                 item.hidden = true;
                 this.flag = item;
@@ -67,6 +70,7 @@ export class Player {
               break;
 
             case 'speed-boost':
+              if (!item.hidden) grabItemSound.play();
               item.hidden = true;
               this.speed += 0.3;
               setTimeout(() => {
@@ -123,7 +127,7 @@ export class Player {
     } else {
       ctx.fillStyle = '#FF6B6B';
     }
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 0.2;
     ctx.font = '35px Bebas Neue';
     ctx.textBaseline = 'middle';

@@ -98,53 +98,56 @@ export class Map {
     });
   }
 
-  draw(ctx) {
+  draw(ctx, camera) {
     ctx.save();
 
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
-        ctx.save();
-        switch (block) {
-          case 0:
-          case 9:
-            ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
-            break;
+        if (
+          camera.isInViewRect(x * tileSize, y * tileSize, tileSize, tileSize)
+        ) {
+          switch (block) {
+            case 0:
+            case 9:
+              ctx.fillStyle = ctx.createPattern(texture.woodFloor, 'repeat');
+              break;
 
-          case 1:
-            ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
-            break;
+            case 1:
+              ctx.fillStyle = ctx.createPattern(texture.steelWall, 'repeat');
+              break;
 
-          case 2:
-          case 3:
-          case 4:
-          case 5:
-          case 6:
-          case 7:
-          case 8:
-            ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
-            break;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+              ctx.fillStyle = ctx.createPattern(texture.steelFloor, 'repeat');
+              break;
 
-          default:
-            break;
+            default:
+              break;
+          }
+
+          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+          // Development block outline
+          // ctx.strokeStyle = 'yellow';
+          // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+          // Development block numbers
+          // ctx.fillStyle = 'white';
+          // ctx.font = '12px Arial';
+          // ctx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
         }
-
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-
-        // Development block outline
-        // ctx.strokeStyle = 'yellow';
-        // ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-
-        // Development block numbers
-        // ctx.fillStyle = 'white';
-        // ctx.font = '12px Arial';
-        // ctx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
-
-        ctx.restore();
       });
     });
 
     this.items.forEach((item) => {
-      item.draw(ctx);
+      if (camera.isInViewRect(item.x, item.y, item.width, item.height)) {
+        item.draw(ctx);
+      }
     });
 
     ctx.restore();
