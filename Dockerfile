@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:alpine
 WORKDIR .
 COPY ["package.json", "package-lock.json", "./"]
 RUN npm install
