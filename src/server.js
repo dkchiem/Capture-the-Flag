@@ -99,11 +99,11 @@ io.on('connection', (socket) => {
     io.emit('updateBullets', bullets);
   });
 
-  socket.on('pickupFlag', (flagData) => {
+  socket.on('pickupFlag', (flagIndex) => {
     if (players[socket.id] == undefined) return;
-    hiddenItems[flagData.index] = flagData.item;
+    hiddenItems[flagIndex] = socket.id;
     io.emit('updateHiddenItems', hiddenItems);
-    players[socket.id].flagIndex = flagData.index;
+    players[socket.id].flagIndex = flagIndex;
     socket.broadcast.emit('updatePlayers', players);
   });
 
@@ -111,8 +111,6 @@ io.on('connection', (socket) => {
     if (players[socket.id] == undefined) return;
     players[socket.id].flagIndex = null;
     delete hiddenItems[flagIndex];
-
-    console.log(flagIndex, hiddenItems);
 
     // Check if a team has won
     if (players[socket.id].team === team.RED) {
@@ -132,6 +130,12 @@ io.on('connection', (socket) => {
     io.emit('updateHiddenItems', hiddenItems);
     socket.broadcast.emit('updatePlayers', players);
     io.emit('updatePoints', points);
+  });
+
+  // Listen for update points events
+  socket.on('grabBoost', (boostIndex) => {
+    hiddenItems[boostIndex] = socket.id;
+    io.emit('updateHiddenItems', hiddenItems);
   });
 
   // socket.on('createRoom', (room) => {

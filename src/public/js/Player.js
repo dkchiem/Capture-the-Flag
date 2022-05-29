@@ -41,10 +41,7 @@ export class Player {
               if (item.team != this.team && this.client) {
                 if (!item.hidden) grabItemSound.play();
                 this.flagIndex = i;
-                socket.emit('pickupFlag', {
-                  item,
-                  index: i,
-                });
+                socket.emit('pickupFlag', i);
               }
               break;
 
@@ -74,6 +71,7 @@ export class Player {
               setTimeout(() => {
                 this.speed -= 0.3;
               }, 7000);
+              socket.emit('grabBoost', i);
               break;
 
             default:
