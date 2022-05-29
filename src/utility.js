@@ -5,12 +5,3 @@ export function* nextTeamGenerator(team) {
     yield teams[n++ % teams.length];
   }
 }
-
-// let dir =
-// (playersData[id].facingAngle - player.facingAngle) / (Math.PI * 2);
-
-// dir -= Math.round(dir);
-// dir = dir * Math.PI * 2;
-
-// let dir = playersData[id].facingAngle - player.facingAngle;
-// otherPlayers[id].facingAngle += dir * 0.1;

@@ -10,7 +10,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const camera = new Camera();
-const shotBullets = [];
+const bullets = {};
 const otherPlayers = {};
 let clientPlayer;
 let map;
@@ -95,27 +95,29 @@ socket.on('updatePlayers', (playersData) => {
 
 // Listen for bullet update events
 socket.on('updateBullets', (serverBullets) => {
-  serverBullets.forEach((bullet, i) => {
-    if (shotBullets[i] == undefined) {
-      shotBullets[i] = new Bullet(
-        bullet.x,
-        bullet.y,
-        bullet.radius,
-        bullet.facingAngle,
-        bullet.speed,
-        bullet.color,
+  for (const id in serverBullets) {
+    const bulletData = serverBullets[id];
+    if (bullets[id] == undefined) {
+      bullets[id] = new Bullet(
+        bulletData.x,
+        bulletData.y,
+        bulletData.radius,
+        bulletData.movingAngle,
+        bulletData.speed,
+        bulletData.color,
         map,
       );
     } else {
-      shotBullets[i].x = bullet.x;
-      shotBullets[i].y = bullet.y;
+      bullets[id].x = bulletData.x;
+      bullets[id].y = bulletData.y;
     }
-  });
-  for (let i = serverBullets.length; i < shotBullets.length; i++) {
-    shotBullets[i].destroy();
-    shotBullets.splice(i, 1);
-    i--;
   }
+  const destroyedBullets = Object.keys(bullets).filter(
+    (bullet) => !Object.keys(serverBullets).includes(bullet),
+  );
+  destroyedBullets.forEach((id) => {
+    delete bullets[id];
+  });
 });
 
 // Listen for player hit events
@@ -202,10 +204,11 @@ function setup() {
       if (otherPlayer.movingY)
         otherPlayer.y += otherPlayer.speed * Math.sin(otherPlayer.movingAngle);
     }
-    shotBullets.forEach((bullet) => {
-      bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
-      bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
-    });
+    for (const id in bullets) {
+      const bullet = bullets[id];
+      bullet.x += bullet.speed * Math.cos(bullet.movingAngle);
+      bullet.y += bullet.speed * Math.sin(bullet.movingAngle);
+    }
   }, 16);
 
   // Send new player position to server
@@ -227,9 +230,9 @@ function render() {
   camera.follow(clientPlayer, map);
   ctx.translate(-camera.x, -camera.y);
   map.draw(ctx);
-  shotBullets.forEach((bullet) => {
-    bullet.draw(ctx);
-  });
+  for (const id in bullets) {
+    bullets[id].draw(ctx);
+  }
   clientPlayer.draw(ctx, socket);
   for (const id in otherPlayers) {
     otherPlayers[id].draw(ctx, socket);

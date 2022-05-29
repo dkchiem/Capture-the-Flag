@@ -12,8 +12,9 @@ const server = http.createServer(app);
 const io = new Server(server);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-let players = {};
-let bullets = [];
+const players = {};
+let nextBulletID = 0;
+let bullets = {};
 const mapData = maps[0];
 let points = { red: 0, blue: 0 };
 
@@ -72,16 +73,17 @@ io.on('connection', (socket) => {
   socket.on('shootBullet', () => {
     if (players[socket.id] == undefined) return;
     const player = players[socket.id];
-    bullets.push({
+    bullets[nextBulletID] = {
       playerId: socket.id,
       x: player.x + (player.gunWidth - 10) * Math.cos(player.facingAngle),
       y: player.y + (player.gunWidth - 10) * Math.sin(player.facingAngle),
       radius: 10,
-      facingAngle: player.facingAngle,
+      movingAngle: player.facingAngle,
       speed: 15,
       color: player.team,
       damage: 10,
-    });
+    };
+    nextBulletID++;
     io.emit('updateBullets', bullets);
   });
 
@@ -138,68 +140,46 @@ setInterval(() => {
 // Reset game
 function reset() {
   points = { red: 0, blue: 0 };
-  bullets = [];
-  nextTeam = team.RED;
+  bullets = {};
 }
 
 // Update bullets
 function UpdateBullets() {
-  bullets.forEach((bullet, i) => {
-    const newBulletX = bullet.x + bullet.speed * Math.cos(bullet.facingAngle);
-    const newBulletY = bullet.y + bullet.speed * Math.sin(bullet.facingAngle);
+  for (const id in bullets) {
+    const bullet = bullets[id];
+    const newBulletX = bullet.x + bullet.speed * Math.cos(bullet.movingAngle);
+    const newBulletY = bullet.y + bullet.speed * Math.sin(bullet.movingAngle);
+
+    for (const playerId in players) {
+      if (bullet.playerId != playerId) {
+        const player = players[playerId];
+        const dx = player.x - bullet.x;
+        const dy = player.y - bullet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < player.radius) {
+          io.emit('playerHit', playerId);
+          player.hp -= bullet.damage;
+          if (player.hp <= 0) {
+            io.emit('playerDead', playerId);
+            player.hp = 100;
+          }
+          io.emit('updatePlayers', players);
+          delete bullets[id];
+        }
+      }
+    }
 
     if (
       mapData[Math.floor(newBulletY / tileSize)][
         Math.floor(newBulletX / tileSize)
       ] === 1
     ) {
-      bullets.splice(i, 1);
-    }
-
-    for (const id in players) {
-      if (bullet.playerId != id) {
-        const dx = players[id].x - bullet.x;
-        const dy = players[id].y - bullet.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < players[id].radius) {
-          io.emit('playerHit', id);
-          players[id].hp -= bullet.damage;
-          io.emit('updatePlayers', players);
-          if (players[id].hp <= 0) {
-            io.emit('playerDead', id);
-            players[id].hp = 100;
-            io.emit('updatePlayers', players);
-          }
-          bullets.splice(i, 1);
-        }
-      }
+      delete bullets[id];
     }
 
     bullet.x = newBulletX;
     bullet.y = newBulletY;
-
-    // bullet.x += bullet.speed * Math.cos(bullet.facingAngle);
-    // bullet.y += bullet.speed * Math.sin(bullet.facingAngle);
-
-    // mapData.forEach((row, y) => {
-    //   row.forEach((block, x) => {
-    //     if (block === 1) {
-    //       const blockX = x * tileSize;
-    //       const blockY = y * tileSize;
-    //       if (
-    //         bullet.x + bullet.radius >= blockX &&
-    //         bullet.x - bullet.radius <= blockX + tileSize &&
-    //         bullet.y + bullet.radius >= blockY &&
-    //         bullet.y - bullet.radius <= blockY + tileSize
-    //       ) {
-    //         bullets.splice(i, 1);
-    //       }
-    //     }
-    //   });
-    // });
-  });
-
-  io.emit('updateBullets', bullets);
+  }
 }
 
 setInterval(UpdateBullets, 16);
