@@ -12,11 +12,11 @@ const server = http.createServer(app);
 const io = new Server(server);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const winningPoints = 3;
-const players = {};
+const winningPoints = 1;
+let players = {};
 let nextBulletID = 0;
 let bullets = {};
-const hiddenItems = {};
+let hiddenItems = {};
 const mapData = maps[0];
 let points = { red: 0, blue: 0 };
 let rooms = [];
@@ -57,6 +57,7 @@ io.on('connection', (socket) => {
       hp: 100,
       dead: false,
       team: newPlayerTeam,
+      flagIndex: null,
     };
     io.emit('updatePlayers', players);
   });
@@ -64,8 +65,11 @@ io.on('connection', (socket) => {
   // Disconnect player
   socket.on('disconnect', () => {
     console.log(`Client ${socket.id} has disconnected`);
-    if (hiddenItems[players[socket.id].flagIndex])
-      delete hiddenItems[players[socket.id].flagIndex];
+    for (const index in hiddenItems) {
+      if (hiddenItems[index] === socket.id) {
+        delete hiddenItems[index];
+      }
+    }
     io.emit('updateHiddenItems', hiddenItems);
     delete players[socket.id];
     io.emit('updatePlayers', players);
@@ -144,7 +148,7 @@ io.on('connection', (socket) => {
 
   // Listen for update points events
   socket.on('grabBoost', (boostIndex) => {
-    hiddenItems[boostIndex] = socket.id;
+    hiddenItems[boostIndex] = 'speed-boost';
     io.emit('updateHiddenItems', hiddenItems);
   });
 });
@@ -167,7 +171,10 @@ setInterval(() => {
 // Reset game
 function reset() {
   points = { red: 0, blue: 0 };
+  players = {};
   bullets = {};
+  hiddenItems = {};
+  nextBulletID = 0;
 }
 
 // Update bullets
