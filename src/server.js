@@ -19,6 +19,7 @@ let bullets = {};
 const hiddenItems = {};
 const mapData = maps[0];
 let points = { red: 0, blue: 0 };
+let rooms = [];
 
 const playerTeam = nextTeamGenerator(team);
 
@@ -66,6 +67,13 @@ io.on('connection', (socket) => {
     io.emit('updateHiddenItems', hiddenItems);
     delete players[socket.id];
     io.emit('updatePlayers', players);
+  });
+
+  socket.on('createRoom', (callback) => {
+    const roomID = Math.floor(100000 + Math.random() * 900000).toString();
+    socket.join(roomID);
+    rooms.push(roomID);
+    callback(roomID);
   });
 
   // Move player
@@ -137,13 +145,6 @@ io.on('connection', (socket) => {
     hiddenItems[boostIndex] = socket.id;
     io.emit('updateHiddenItems', hiddenItems);
   });
-
-  // socket.on('createRoom', (room) => {
-  //   const roomID = Math.floor(100000 + Math.random() * 900000).toString();
-  //   socket.join(room);
-  //   console.log(socket);
-  //   parties.push({ id: roomID, players: [socket.id] });
-  // });
 });
 
 server.listen(3000, () => {

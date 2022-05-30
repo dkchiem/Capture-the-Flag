@@ -38,8 +38,8 @@ export class Player {
 
           switch (item.type) {
             case 'flag':
-              if (item.team != this.team && this.client) {
-                if (!item.hidden) grabItemSound.play();
+              if (!item.hidden && item.team != this.team && this.client) {
+                grabItemSound.play();
                 this.flagIndex = i;
                 socket.emit('pickupFlag', i);
               }
@@ -65,13 +65,16 @@ export class Player {
               break;
 
             case 'speed-boost':
-              if (!item.hidden) grabItemSound.play();
-              item.hidden = true;
-              this.speed += 0.3;
-              setTimeout(() => {
-                this.speed -= 0.3;
-              }, 7000);
-              socket.emit('grabBoost', i);
+              if (!item.hidden) {
+                item.hidden = true;
+                grabItemSound.play();
+                this.speed += 2;
+                setTimeout(() => {
+                  this.speed -= 2;
+                }, 7000);
+                socket.emit('grabBoost', i);
+                console.log(this.speed);
+              }
               break;
 
             default:

@@ -18,9 +18,9 @@ export class Map {
     this.offScreenCanvas.height = this.height;
 
     const offScreenCtx = this.offScreenCanvas.getContext('2d');
-    offScreenCtx.save();
     this.mapData.forEach((row, y) => {
       row.forEach((block, x) => {
+        offScreenCtx.save();
         switch (block) {
           case 0:
             offScreenCtx.fillStyle = offScreenCtx.createPattern(
@@ -113,8 +113,8 @@ export class Map {
           default:
             break;
         }
-
         offScreenCtx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        offScreenCtx.restore();
 
         // Development block outline
         // offScreenCtx.strokeStyle = 'yellow';
@@ -126,7 +126,6 @@ export class Map {
         // offScreenCtx.fillText(`${x},${y}`, x * tileSize + 4, y * tileSize + 12);
       });
     });
-    offScreenCtx.restore();
   }
 
   draw(ctx, camera) {
