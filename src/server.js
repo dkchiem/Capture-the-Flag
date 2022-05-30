@@ -55,6 +55,7 @@ io.on('connection', (socket) => {
     players[socket.id] = {
       ...PlayerData,
       hp: 100,
+      dead: false,
       team: newPlayerTeam,
     };
     io.emit('updatePlayers', players);
@@ -63,7 +64,8 @@ io.on('connection', (socket) => {
   // Disconnect player
   socket.on('disconnect', () => {
     console.log(`Client ${socket.id} has disconnected`);
-    delete hiddenItems[players[socket.id].flagIndex];
+    if (hiddenItems[players[socket.id].flagIndex])
+      delete hiddenItems[players[socket.id].flagIndex];
     io.emit('updateHiddenItems', hiddenItems);
     delete players[socket.id];
     io.emit('updatePlayers', players);
@@ -154,7 +156,7 @@ server.listen(3000, () => {
 setInterval(() => {
   for (const id in players) {
     if (players[id]) {
-      if (players[id].hp < 100) {
+      if (players[id].hp < 100 && players[id].dead === false) {
         players[id].hp++;
         io.emit('updatePlayers', players);
       }
@@ -176,8 +178,8 @@ function UpdateBullets() {
     const newBulletY = bullet.y + bullet.speed * Math.sin(bullet.movingAngle);
 
     for (const playerId in players) {
-      if (bullet.playerId != playerId) {
-        const player = players[playerId];
+      const player = players[playerId];
+      if (bullet.playerId != playerId && player.dead === false) {
         const dx = player.x - bullet.x;
         const dy = player.y - bullet.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -186,7 +188,13 @@ function UpdateBullets() {
           player.hp -= bullet.damage;
           if (player.hp <= 0) {
             io.emit('playerDead', playerId);
-            player.hp = 100;
+            player.dead = true;
+            setTimeout(() => {
+              player.hp = 100;
+              player.dead = false;
+              io.emit('respawnPlayer', playerId);
+              io.emit('updatePlayers', players);
+            }, 3000);
           }
           io.emit('updatePlayers', players);
           delete bullets[id];

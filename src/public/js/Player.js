@@ -17,7 +17,7 @@ export class Player {
     this.gunHeight = 25;
     this.flagIndex = null;
     this.client = client;
-    this.alpha = 1;
+    this.dead = false;
     this.hp = 100;
     this.movingX = false;
     this.movingY = false;
@@ -86,7 +86,7 @@ export class Player {
 
     // Gun
     ctx.save();
-    ctx.globalAlpha = this.alpha;
+    ctx.globalAlpha = this.dead ? 0 : 1;
     ctx.fillStyle = '#979797';
     ctx.translate(this.x, this.y);
     ctx.rotate(this.facingAngle);
@@ -96,7 +96,7 @@ export class Player {
     // Circle
     ctx.save();
     ctx.beginPath();
-    ctx.globalAlpha = this.alpha;
+    ctx.globalAlpha = this.dead ? 0 : 1;
     ctx.fillStyle = this.team;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
     ctx.fill();
@@ -126,6 +126,7 @@ export class Player {
     } else {
       ctx.fillStyle = '#FF6B6B';
     }
+    ctx.globalAlpha = this.dead ? 0 : 1;
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 0.2;
     ctx.font = '35px Bebas Neue';
@@ -203,12 +204,16 @@ export class Player {
     }
   }
 
+  died() {
+    this.flagIndex = null;
+    this.dead = true;
+  }
+
   respawn() {
     this.x = this.map.getSpawnPoint(this.team).x + tileSize / 2;
     this.y = this.map.getSpawnPoint(this.team).y + tileSize / 2;
-    this.map.items[this.flagIndex].hidden = false;
-    this.flagIndex = null;
     this.hp = 100;
+    this.dead = false;
     if (this.client) {
       updateHpBar(100);
     }

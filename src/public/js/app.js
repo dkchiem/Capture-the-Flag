@@ -143,6 +143,26 @@ socket.on('playerDead', (id) => {
   const deathSound = new Audio('/sounds/death.flac');
   deathSound.play();
   if (id === socket.id) {
+    clientPlayer.died();
+    const countdownText = document.getElementById('countdown');
+    let count = 3;
+    countdownText.style.display = 'block';
+    countdownText.innerText = count;
+    const countdown = setInterval(() => {
+      count--;
+      countdownText.innerText = count;
+      if (count === 0) {
+        countdownText.style.display = 'none';
+        clearInterval(countdown);
+      }
+    }, 1000);
+  } else {
+    otherPlayers[id].died();
+  }
+});
+
+socket.on('respawnPlayer', (id) => {
+  if (id === socket.id) {
     clientPlayer.respawn();
   } else {
     otherPlayers[id].respawn();
