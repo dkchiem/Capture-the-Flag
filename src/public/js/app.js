@@ -5,6 +5,15 @@ import { Bullet } from './Bullet.js';
 import { tileSize, team, direction } from './constants.js';
 import { updateLeaderboard, updateHpBar } from './gui.js';
 
+function startMusic() {
+  const music = new Audio('/sounds/music.mp3');
+  music.loop = true;
+  music.volume = 0.5;
+  music.play();
+  removeEventListener('mousemove', startMusic);
+}
+addEventListener('mousemove', startMusic);
+
 const socket = io();
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');

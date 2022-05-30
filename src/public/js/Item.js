@@ -12,6 +12,10 @@ export class Item {
 
   draw(ctx) {
     if (!this.hidden) {
+      ctx.shadowColor = 'rgba(0, 0, 0, .3)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
       ctx.drawImage(this.texture, this.x, this.y, this.width, this.height);
     }
   }
