@@ -75,12 +75,13 @@ io.on('connection', (socket) => {
     io.emit('updatePlayers', players);
   });
 
-  socket.on('createRoom', (callback) => {
-    const roomID = Math.floor(100000 + Math.random() * 900000).toString();
-    socket.join(roomID);
-    rooms.push(roomID);
-    callback(roomID);
-  });
+  // Create a new room
+  // socket.on('createRoom', (callback) => {
+  //   const roomID = Math.floor(100000 + Math.random() * 900000).toString();
+  //   socket.join(roomID);
+  //   rooms.push(roomID);
+  //   callback(roomID);
+  // });
 
   // Move player
   socket.on('movePlayer', (positionData) => {

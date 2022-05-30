@@ -46,10 +46,6 @@ body {
   display: none;
 }
 
-#countdown::after {
-  background-color: #000;
-}
-
 #hp-bar {
   position: absolute;
   bottom: 20px;
