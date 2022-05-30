@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const winningPoints = 1;
+const winningPoints = 3;
 let players = {};
 let nextBulletID = 0;
 let bullets = {};
