@@ -1,4 +1,4 @@
-import { clamp } from './utils.js';
+import { clamp, randomSign } from './utils.js';
 
 const canvas = document.querySelector('canvas');
 
@@ -6,6 +6,7 @@ export class Camera {
   constructor() {
     this.x = 0;
     this.y = 0;
+    this.shaking = false;
   }
 
   follow(player, map) {
@@ -16,7 +17,7 @@ export class Camera {
         canvas.width > map.width
           ? (map.width - canvas.width) / 2
           : map.width - canvas.width,
-      ),
+      ) + (this.shaking ? Math.random() * 5 * randomSign() : 0),
     );
     this.y = Math.round(
       clamp(
@@ -25,7 +26,7 @@ export class Camera {
         canvas.height > map.height
           ? (map.height - canvas.height) / 2
           : map.height - canvas.height,
-      ),
+      ) + (this.shaking ? Math.random() * 5 * randomSign() : 0),
     );
   }
 
@@ -45,5 +46,12 @@ export class Camera {
       y + radius > this.y &&
       y - radius < this.y + canvas.height
     );
+  }
+
+  shake() {
+    this.shaking = true;
+    setTimeout(() => {
+      this.shaking = false;
+    }, 150);
   }
 }

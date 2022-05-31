@@ -5,14 +5,14 @@ import { Bullet } from './Bullet.js';
 import { tileSize, team, direction } from './constants.js';
 import { updateLeaderboard, updateHpBar } from './gui.js';
 
-// function startMusic() {
-//   const music = new Audio('/sounds/music.mp3');
-//   music.loop = true;
-//   music.volume = 0.5;
-//   music.play();
-//   removeEventListener('mousemove', startMusic);
-// }
-// addEventListener('mousemove', startMusic);
+function startMusic() {
+  const music = new Audio('/sounds/music.mp3');
+  music.loop = true;
+  music.volume = 0.5;
+  music.play();
+  removeEventListener('mousemove', startMusic);
+}
+addEventListener('mousemove', startMusic);
 
 const socket = io();
 const canvas = document.querySelector('canvas');
@@ -141,6 +141,7 @@ socket.on('updateBullets', (serverBullets) => {
 // Listen for player hit events
 socket.on('playerHit', (id) => {
   if (id === socket.id) {
+    camera.shake();
     clientPlayer.hit();
   } else {
     otherPlayers[id].hit();

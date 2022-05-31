@@ -27,7 +27,6 @@ export class Map {
               texture.woodFloor,
               'repeat',
             );
-            offScreenCtx.globalCompositeOperation = 'destination-over';
             break;
 
           case 1:
@@ -35,10 +34,6 @@ export class Map {
               texture.steelWall,
               'repeat',
             );
-            offScreenCtx.shadowColor = 'rgba(0, 0, 0, .3)';
-            offScreenCtx.shadowBlur = 4;
-            offScreenCtx.shadowOffsetX = 3;
-            offScreenCtx.shadowOffsetY = 3;
             break;
 
           case 2:
