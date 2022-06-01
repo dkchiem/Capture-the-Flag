@@ -99,6 +99,7 @@ io.on('connection', (socket) => {
   // Shoot bullet
   socket.on('shootBullet', () => {
     if (players[socket.id] == undefined) return;
+    if (players[socket.id].dead === true) return;
     const player = players[socket.id];
     bullets[nextBulletID] = {
       playerId: socket.id,
@@ -116,6 +117,7 @@ io.on('connection', (socket) => {
 
   socket.on('pickupFlag', (flagIndex) => {
     if (players[socket.id] == undefined) return;
+    if (players[socket.id].dead === true) return;
     hiddenItems[flagIndex] = socket.id;
     io.emit('updateHiddenItems', hiddenItems);
     players[socket.id].flagIndex = flagIndex;
@@ -124,6 +126,7 @@ io.on('connection', (socket) => {
 
   socket.on('dropFlag', (flagIndex) => {
     if (players[socket.id] == undefined) return;
+    if (players[socket.id].dead === true) return;
     players[socket.id].flagIndex = null;
     delete hiddenItems[flagIndex];
 
@@ -149,6 +152,7 @@ io.on('connection', (socket) => {
 
   // Listen for update points events
   socket.on('grabBoost', (boostIndex) => {
+    if (players[socket.id].dead === true) return;
     hiddenItems[boostIndex] = 'speed-boost';
     io.emit('updateHiddenItems', hiddenItems);
   });
