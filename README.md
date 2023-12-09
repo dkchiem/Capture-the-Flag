@@ -1,4 +1,5 @@
 # Capture the Flag
+This is a multiplayer capture the flag game created for a school project using the Socket.IO package. The first team that captures the other team's flag three times will win. To play this game, multiple players can go to [this website](https://ctf.chiem.me) and will be automatically assigned to a team.
 
 ## Images
 
